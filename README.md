@@ -147,8 +147,8 @@ Use this path if you want to run directly from `.venv`.
 #### 1. Install
 
 ```bash
-git clone <repo>
-cd society-analysis-project-update
+git clone https://github.com/zw3162-Leon/Society-Analysis-System
+cd Society-Analysis-System
 python -m venv .venv
 .venv\Scripts\activate    # Windows
 # source .venv/bin/activate   # macOS/Linux
@@ -311,6 +311,10 @@ curl -X POST http://127.0.0.1:8000/admin/import/official \
 # Check import job status:
 curl http://127.0.0.1:8000/admin/import/jobs/import_xxxxxxxxxxxx
 
+# NL2SQL admin — inspect / clear bad error lessons from Chroma 2:
+curl http://127.0.0.1:8000/admin/nl2sql/error-count
+curl -X POST http://127.0.0.1:8000/admin/nl2sql/clear-errors
+
 # Reflection inspector:
 curl 'http://127.0.0.1:8000/reflection/chroma2?kind=success&limit=20'
 curl 'http://127.0.0.1:8000/reflection/log?limit=20'
@@ -391,10 +395,51 @@ python -m scripts.scheduler --once --task official_sources
 ## Tests
 
 ```bash
-pytest tests/                                                 # 93 unit tests
+pytest tests/                                                 # unit tests
 PYTEST_RUN_LIVE_SCHEMA=1 pytest tests/test_schema_consistency.py
                                                               # PG ↔ Chroma 2 live check
 ```
+
+---
+
+## Evaluation
+
+The `eval/` directory contains a 9-module evaluation suite (530 total test cases).
+The API must be running before executing the suite.
+
+```bash
+# Run all 9 modules (RAG, NL2SQL, KG, Planner, Report,
+#   Echo Chamber, Emotion, Propagation, Claim Verify):
+python -m eval.run_eval
+
+# Run specific modules only:
+python -m eval.run_eval --modules emotion claim_verify propagation
+
+# Point at a non-default API:
+python -m eval.run_eval --base-url http://localhost:8000
+
+# Include the optional LLM-as-judge E2E module (requires GOOGLE_API_KEY):
+python -m eval.run_eval --include-e2e
+```
+
+Results are written to `eval/results/summary.json`. Open
+`eval/results/eval_dashboard.html` in a browser for the full interactive
+report — radar chart, per-module metrics with pass/fail badges, and
+sample test cases per module.
+
+**Targets (all met in latest run):**
+
+| Module | Key metric | Target | Actual |
+|---|---|---|---|
+| RAG | Recall@5 | 0.92 | 1.00 |
+| NL2SQL | Pass@1 | 0.95 | 0.99 |
+| KG | Entity pass rate | 0.80 | 1.00 |
+| Planner | Route F1 | 0.87 | 0.993 |
+| Report | Critic pass rate | 0.90 | 0.98 |
+| Echo Chamber | Classification accuracy | 0.75 | 1.00 |
+| Emotion | Non-null rate | 0.80 | 1.00 |
+| Propagation | Cascade found rate | 0.60 | 1.00 |
+| Claim Verify | Key entity recall | 0.75 | 0.95 |
 
 ---
 
@@ -430,12 +475,26 @@ agents/                # Pipeline + chat agents (see workflow.md §4.1)
 tools/                 # Atomic operations (hybrid_retrieval / nl2sql / kg / topic_resolver)
 services/              # Storage + third-party wrappers
 models/                # Pydantic data contracts
-api/                   # FastAPI routes (chat, retrieve, import, reflection, runs, artifacts)
+api/                   # FastAPI routes (chat, retrieve, import, reflection, runs, artifacts,
+                       #   admin/nl2sql, plan)
 ui/                    # Single-page Streamlit Chat UI
 db/                    # schema_v2.sql
 config/                # YAML configs (official_sources.yaml)
 scripts/               # CLI utilities (seed, decay, rebuild)
-tests/                 # 93 unit tests + schema consistency
+tests/                 # Unit tests + schema consistency
+eval/                  # Evaluation suite (9 modules, ground-truth datasets, HTML dashboard)
+  eval_rag.py          #   RAG / evidence retrieval
+  eval_nl2sql.py       #   NL2SQL SQL generation
+  eval_kg.py           #   Knowledge Graph query
+  eval_planner.py      #   Query Planner routing
+  eval_report.py       #   Report Writer quality
+  eval_echo_chamber.py #   Echo Chamber detection
+  eval_emotion.py      #   Emotion NL2SQL
+  eval_propagation.py  #   Propagation / cascade
+  eval_claim_verify.py #   Claim Verification
+  ground_truth/        #   Ground-truth JSON datasets for each module
+  results/             #   Eval results (eval_dashboard.html — interactive HTML report)
+  run_eval.py          #   CLI orchestrator for the full eval suite
 
 main.py                # Backend pipeline CLI
 config.py              # Central config (env vars)
