@@ -1,0 +1,412 @@
+{
+  "generated_at": "2026-05-05T10:28:41.212778Z",
+  "entries": [
+    {
+      "gt_file": "planner_gt.json",
+      "entry_id": "plan_001",
+      "question": "How many total posts are in the database?",
+      "target_branch": "nl2sql",
+      "predicted_branches": [
+        "nl2sql"
+      ],
+      "routing_passed": true,
+      "data_verified": true,
+      "rewrites_needed": 0,
+      "notes": ""
+    },
+    {
+      "gt_file": "planner_gt.json",
+      "entry_id": "plan_002",
+      "question": "Count the number of distinct topics in the system",
+      "target_branch": "nl2sql",
+      "predicted_branches": [
+        "nl2sql"
+      ],
+      "routing_passed": true,
+      "data_verified": true,
+      "rewrites_needed": 0,
+      "notes": ""
+    },
+    {
+      "gt_file": "planner_gt.json",
+      "entry_id": "plan_003",
+      "question": "Which topics have the most posts in the database?",
+      "target_branch": "nl2sql",
+      "predicted_branches": [
+        "nl2sql"
+      ],
+      "routing_passed": true,
+      "data_verified": true,
+      "rewrites_needed": 0,
+      "notes": ""
+    },
+    {
+      "gt_file": "planner_gt.json",
+      "entry_id": "plan_004",
+      "question": "How many distinct authors have posted in the system?",
+      "target_branch": "nl2sql",
+      "predicted_branches": [
+        "nl2sql"
+      ],
+      "routing_passed": true,
+      "data_verified": true,
+      "rewrites_needed": 0,
+      "notes": ""
+    },
+    {
+      "gt_file": "planner_gt.json",
+      "entry_id": "plan_005",
+      "question": "What is the average like count across all posts?",
+      "target_branch": "nl2sql",
+      "predicted_branches": [
+        "nl2sql"
+      ],
+      "routing_passed": true,
+      "data_verified": true,
+      "rewrites_needed": 0,
+      "notes": ""
+    },
+    {
+      "gt_file": "planner_gt.json",
+      "entry_id": "plan_006",
+      "question": "How many entities have a mention count above 10?",
+      "target_branch": "nl2sql",
+      "predicted_branches": [
+        "nl2sql"
+      ],
+      "routing_passed": true,
+      "data_verified": true,
+      "rewrites_needed": 0,
+      "notes": ""
+    },
+    {
+      "gt_file": "planner_gt.json",
+      "entry_id": "plan_007",
+      "question": "Which are the top 5 most mentioned entities by mention count",
+      "target_branch": "nl2sql",
+      "predicted_branches": [
+        "nl2sql"
+      ],
+      "routing_passed": true,
+      "data_verified": true,
+      "rewrites_needed": 0,
+      "notes": ""
+    },
+    {
+      "gt_file": "planner_gt.json",
+      "entry_id": "plan_008",
+      "question": "How many posts have an emotion score above 0.5?",
+      "target_branch": "nl2sql",
+      "predicted_branches": [
+        "nl2sql"
+      ],
+      "routing_passed": true,
+      "data_verified": true,
+      "rewrites_needed": 0,
+      "notes": ""
+    },
+    {
+      "gt_file": "planner_gt.json",
+      "entry_id": "plan_009",
+      "question": "According to BBC, what happened when the US struck Iranian f",
+      "target_branch": "evidence+nl2sql",
+      "predicted_branches": [
+        "evidence",
+        "nl2sql"
+      ],
+      "routing_passed": true,
+      "data_verified": true,
+      "rewrites_needed": 0,
+      "notes": ""
+    },
+    {
+      "gt_file": "planner_gt.json",
+      "entry_id": "plan_010",
+      "question": "What did news articles say about the hantavirus outbreak on ",
+      "target_branch": "evidence+nl2sql",
+      "predicted_branches": [
+        "evidence",
+        "nl2sql"
+      ],
+      "routing_passed": true,
+      "data_verified": true,
+      "rewrites_needed": 0,
+      "notes": ""
+    },
+    {
+      "gt_file": "planner_gt.json",
+      "entry_id": "plan_011",
+      "question": "Which articles describe the Ukrainian drone strikes on Mosco",
+      "target_branch": "evidence+nl2sql",
+      "predicted_branches": [
+        "evidence",
+        "nl2sql"
+      ],
+      "routing_passed": true,
+      "data_verified": true,
+      "rewrites_needed": 0,
+      "notes": ""
+    },
+    {
+      "gt_file": "planner_gt.json",
+      "entry_id": "plan_012",
+      "question": "Find evidence that European leaders visited Armenia while Ru",
+      "target_branch": "evidence+nl2sql",
+      "predicted_branches": [
+        "evidence",
+        "nl2sql"
+      ],
+      "routing_passed": true,
+      "data_verified": true,
+      "rewrites_needed": 0,
+      "notes": ""
+    },
+    {
+      "gt_file": "planner_gt.json",
+      "entry_id": "plan_013",
+      "question": "What did Reuters report about the Maersk ship transiting the",
+      "target_branch": "evidence+nl2sql",
+      "predicted_branches": [
+        "evidence",
+        "nl2sql"
+      ],
+      "routing_passed": true,
+      "data_verified": true,
+      "rewrites_needed": 0,
+      "notes": ""
+    },
+    {
+      "gt_file": "planner_gt.json",
+      "entry_id": "plan_014",
+      "question": "According to news reports, how is Trump's economy performing",
+      "target_branch": "evidence+nl2sql",
+      "predicted_branches": [
+        "evidence",
+        "nl2sql"
+      ],
+      "routing_passed": true,
+      "data_verified": true,
+      "rewrites_needed": 0,
+      "notes": ""
+    },
+    {
+      "gt_file": "planner_gt.json",
+      "entry_id": "plan_015",
+      "question": "What did Reuters report about Tesla's Full Self-Driving appr",
+      "target_branch": "evidence+nl2sql",
+      "predicted_branches": [
+        "evidence",
+        "nl2sql"
+      ],
+      "routing_passed": true,
+      "data_verified": true,
+      "rewrites_needed": 0,
+      "notes": ""
+    },
+    {
+      "gt_file": "planner_gt.json",
+      "entry_id": "plan_016",
+      "question": "Which BBC article covers the BJP winning West Bengal in the ",
+      "target_branch": "evidence+nl2sql",
+      "predicted_branches": [
+        "evidence",
+        "nl2sql"
+      ],
+      "routing_passed": true,
+      "data_verified": true,
+      "rewrites_needed": 0,
+      "notes": ""
+    },
+    {
+      "gt_file": "planner_gt.json",
+      "entry_id": "plan_017",
+      "question": "What do AP reports say about Russia declaring a truce in Ukr",
+      "target_branch": "evidence+nl2sql",
+      "predicted_branches": [
+        "evidence",
+        "nl2sql"
+      ],
+      "routing_passed": true,
+      "data_verified": true,
+      "rewrites_needed": 0,
+      "notes": ""
+    },
+    {
+      "gt_file": "planner_gt.json",
+      "entry_id": "plan_018",
+      "question": "Find evidence from news sources about the UK's declining hea",
+      "target_branch": "evidence+nl2sql",
+      "predicted_branches": [
+        "evidence",
+        "nl2sql"
+      ],
+      "routing_passed": true,
+      "data_verified": true,
+      "rewrites_needed": 0,
+      "notes": ""
+    },
+    {
+      "gt_file": "planner_gt.json",
+      "entry_id": "plan_019",
+      "question": "What is the propagation path of information about the Russia",
+      "target_branch": "kg",
+      "predicted_branches": [
+        "kg"
+      ],
+      "routing_passed": true,
+      "data_verified": true,
+      "rewrites_needed": 0,
+      "notes": ""
+    },
+    {
+      "gt_file": "planner_gt.json",
+      "entry_id": "plan_020",
+      "question": "Which accounts are coordinated in spreading content about Tr",
+      "target_branch": "kg",
+      "predicted_branches": [
+        "kg"
+      ],
+      "routing_passed": true,
+      "data_verified": true,
+      "rewrites_needed": 0,
+      "notes": ""
+    },
+    {
+      "gt_file": "planner_gt.json",
+      "entry_id": "plan_021",
+      "question": "What is the propagation path of content about Iran in the so",
+      "target_branch": "kg",
+      "predicted_branches": [
+        "kg"
+      ],
+      "routing_passed": true,
+      "data_verified": true,
+      "rewrites_needed": 0,
+      "notes": ""
+    },
+    {
+      "gt_file": "planner_gt.json",
+      "entry_id": "plan_022",
+      "question": "Which accounts show coordinated behavior in amplifying Hormu",
+      "target_branch": "kg",
+      "predicted_branches": [
+        "kg"
+      ],
+      "routing_passed": true,
+      "data_verified": true,
+      "rewrites_needed": 0,
+      "notes": ""
+    },
+    {
+      "gt_file": "planner_gt.json",
+      "entry_id": "plan_023",
+      "question": "What is the information cascade structure for drone strike c",
+      "target_branch": "kg",
+      "predicted_branches": [
+        "kg"
+      ],
+      "routing_passed": true,
+      "data_verified": true,
+      "rewrites_needed": 0,
+      "notes": ""
+    },
+    {
+      "gt_file": "planner_gt.json",
+      "entry_id": "plan_024",
+      "question": "Which entities are most connected to the Russia-Ukraine conf",
+      "target_branch": "kg+nl2sql",
+      "predicted_branches": [
+        "kg",
+        "nl2sql"
+      ],
+      "routing_passed": true,
+      "data_verified": true,
+      "rewrites_needed": 0,
+      "notes": ""
+    },
+    {
+      "gt_file": "planner_gt.json",
+      "entry_id": "plan_025",
+      "question": "How are Iran and the US related in the network graph and wha",
+      "target_branch": "kg+nl2sql",
+      "predicted_branches": [
+        "kg"
+      ],
+      "routing_passed": false,
+      "data_verified": true,
+      "rewrites_needed": 0,
+      "notes": "predicted ['kg'] != expected ['kg', 'nl2sql']"
+    },
+    {
+      "gt_file": "planner_gt.json",
+      "entry_id": "plan_026",
+      "question": "Which entities frequently appear together in the knowledge g",
+      "target_branch": "kg+nl2sql",
+      "predicted_branches": [
+        "kg",
+        "nl2sql"
+      ],
+      "routing_passed": true,
+      "data_verified": true,
+      "rewrites_needed": 0,
+      "notes": ""
+    },
+    {
+      "gt_file": "planner_gt.json",
+      "entry_id": "plan_027",
+      "question": "What community structure exists in the knowledge graph aroun",
+      "target_branch": "kg+nl2sql",
+      "predicted_branches": [
+        "kg",
+        "nl2sql"
+      ],
+      "routing_passed": true,
+      "data_verified": true,
+      "rewrites_needed": 0,
+      "notes": ""
+    },
+    {
+      "gt_file": "planner_gt.json",
+      "entry_id": "plan_028",
+      "question": "Which entities are central to the Russia-Ukraine topic in th",
+      "target_branch": "kg+nl2sql",
+      "predicted_branches": [
+        "kg",
+        "nl2sql"
+      ],
+      "routing_passed": true,
+      "data_verified": true,
+      "rewrites_needed": 0,
+      "notes": ""
+    },
+    {
+      "gt_file": "planner_gt.json",
+      "entry_id": "plan_029",
+      "question": "What is the echo chamber structure around NATO and Russia co",
+      "target_branch": "kg+nl2sql",
+      "predicted_branches": [
+        "kg",
+        "nl2sql"
+      ],
+      "routing_passed": true,
+      "data_verified": true,
+      "rewrites_needed": 0,
+      "notes": ""
+    },
+    {
+      "gt_file": "planner_gt.json",
+      "entry_id": "plan_030",
+      "question": "What do news articles say about Iran-UAE tensions in the Str",
+      "target_branch": "evidence+kg+nl2sql",
+      "predicted_branches": [
+        "evidence",
+        "kg",
+        "nl2sql"
+      ],
+      "routing_passed": true,
+      "data_verified": true,
+      "rewrites_needed": 0,
+      "notes": ""
+    }
+  ]
+}

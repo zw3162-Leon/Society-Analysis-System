@@ -52,3 +52,5 @@ class ChatResponse(BaseModel):
     branch_outputs: dict[str, Any] = Field(default_factory=dict)
     citations: list[dict[str, Any]] = Field(default_factory=list)
     needs_human_review: bool = False
+    critic_attempts: int = Field(default=1)
+    critic_passed_on: Optional[str] = Field(default=None)  # "first" | "second" | None

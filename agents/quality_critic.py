@@ -32,7 +32,7 @@ from typing import Optional
 import openai
 import structlog
 
-from config import OPENAI_API_KEY, OPENAI_MODEL
+from config import LLM_REQUEST_TIMEOUT, OPENAI_API_KEY, OPENAI_MODEL
 from agents.planner_v2 import PlanExecutionV2
 from models.branch_output import EvidenceOutput, KGOutput, SQLOutput
 from models.reflection import CriticVerdict, ErrorKind, FailedBranch
@@ -82,7 +82,7 @@ class QualityCritic:
     max_numeric_drift: float = 1e-6
 
     def __post_init__(self) -> None:
-        self.client = self.client or openai.OpenAI(api_key=OPENAI_API_KEY)
+        self.client = self.client or openai.OpenAI(api_key=OPENAI_API_KEY, timeout=LLM_REQUEST_TIMEOUT)
 
     # ── Public ───────────────────────────────────────────────────────────────
 

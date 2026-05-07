@@ -34,6 +34,60 @@ from services.embeddings_service import EmbeddingsService
 
 log = structlog.get_logger(__name__)
 
+# Valid metadata keys for Chroma pre-filtering. publish_date is intentionally
+# excluded: date-range strings from the UI cannot be expressed as a single
+# Chroma operator, and hard date cuts silently drop semantically relevant
+# articles. Date filtering belongs in the NL2SQL (SQL WHERE) branch.
+_VALID_FILTER_KEYS = {"source", "domain", "tier", "title", "topic_hint"}
+# LLM aliases → canonical key
+_KEY_ALIASES = {
+    "official_sources": "source",
+    "sources":          "source",
+    "news_source":      "source",
+    "media_source":     "source",
+}
+# Keys that are never valid for the official-chunk store
+_COMMUNITY_KEYS = {"subreddit", "author", "account_id", "post_id",
+                   "publish_date", "date_range", "official_date_range"}
+
+
+def _normalize_metadata_filter(raw: Optional[dict]) -> Optional[dict]:
+    """Convert LLM-generated metadata_filter into valid Chroma where syntax.
+
+    Handles two common LLM mistakes:
+    - Wrong key names (official_sources, subreddit, date_range …)
+    - Multiple top-level keys without a $and wrapper
+    """
+    if not raw:
+        return None
+
+    conditions: list[dict] = []
+    for key, val in raw.items():
+        # Remap known aliases
+        canon = _KEY_ALIASES.get(key, key)
+        # Drop community-side keys and anything not in the official schema
+        if canon in _COMMUNITY_KEYS or canon not in _VALID_FILTER_KEYS:
+            log.debug("hybrid.filter_key_dropped", key=key, canon=canon)
+            continue
+        if isinstance(val, list):
+            if not val:
+                continue
+            if len(val) == 1:
+                conditions.append({canon: {"$eq": val[0]}})
+            else:
+                conditions.append({canon: {"$in": val}})
+        elif isinstance(val, str):
+            conditions.append({canon: {"$eq": val}})
+        # Non-string/list values (int, bool …) passed through as-is
+        else:
+            conditions.append({canon: {"$eq": val}})
+
+    if not conditions:
+        return None
+    if len(conditions) == 1:
+        return conditions[0]
+    return {"$and": conditions}
+
 
 # ── BM25 helper (lazy import + LRU cache) ────────────────────────────────────
 
@@ -126,6 +180,9 @@ class HybridRetriever:
     rerank_top_k: int = 20
     final_top_k: int = 10
 
+    def __post_init__(self) -> None:
+        self.reranker.warmup()
+
     def retrieve(
         self,
         query: str,
@@ -134,6 +191,7 @@ class HybridRetriever:
         rerank: bool = True,
     ) -> EvidenceBundle:
         t0 = time.monotonic()
+        metadata_filter = _normalize_metadata_filter(metadata_filter)
         bundle = EvidenceBundle(query=query, metadata_filter=metadata_filter or {})
 
         if not query or not query.strip():

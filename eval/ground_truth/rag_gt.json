@@ -1,0 +1,1216 @@
+{
+  "version": "3.0",
+  "description": "100 RAG queries. 40 original + 35 hard + 25 multi_chunk. chunk_ids verified from live Chroma.",
+  "entries": [
+    {
+      "id": "rag_001",
+      "query": "What did the US military do when Iranian fast boats attacked in the Strait of Hormuz?",
+      "relevant_chunk_ids": [
+        "de05a34e9743a9910aa24a51575f12446d683be45148c3479f1a542f2f843ae7",
+        "b640a051b1489f2352ff7aaf001043c58f1f3c6366f93db74275ce212fe23195",
+        "d11e5c8bfdd71b0250536caedf87ac852159f5f3789a29509195c80c81a73b70",
+        "56dc738040302cc43f5d033df1813cffd73d63f46a7e6f3cd9f3cf6356dfb456"
+      ],
+      "source": "bbc",
+      "query_type": "original"
+    },
+    {
+      "id": "rag_002",
+      "query": "What happened to the hantavirus outbreak on the cruise ship?",
+      "relevant_chunk_ids": [
+        "d10e3f1ccb5591cb7e098d0dfeef1dc8a2aca3e7f21e452dd49616f2439352da",
+        "05538fdb413af54dedb9537ac150686ae960862e2f63c330e5f2ce7354e17994",
+        "d44ca21c11596732406a788ac5e1bdffb519007dbb00a7ecb6c35725bb8c6ac7",
+        "00663ecccf09c2b37554057a198469ee00636eb725420c59470bb1e8d3ce73c7"
+      ],
+      "source": "bbc",
+      "query_type": "original"
+    },
+    {
+      "id": "rag_003",
+      "query": "What did news reports say about Ukrainian drone strikes on Moscow high-rises?",
+      "relevant_chunk_ids": [
+        "dd8a7f1c2cf0599050ca7eb0aa94f22782ac88427809cd0c308c796a5f9c04ed",
+        "5c3f16bbf0c25cf4dae0d4be377e1dd4b584db91aee9a6dde9979fde31e3f17c",
+        "82a130d817321005b995a7b18a00aa3ba15070b11c42e557956c639dc3721396"
+      ],
+      "source": "bbc, nyt",
+      "query_type": "original"
+    },
+    {
+      "id": "rag_004",
+      "query": "What did news reports say about Russia declaring a truce for Victory Day in Ukraine?",
+      "relevant_chunk_ids": [
+        "5c3f16bbf0c25cf4dae0d4be377e1dd4b584db91aee9a6dde9979fde31e3f17c",
+        "dd8a7f1c2cf0599050ca7eb0aa94f22782ac88427809cd0c308c796a5f9c04ed",
+        "9fddb8da025e35722a8c724a9233125d3de37bceaaff13405da85eb83c99df8e"
+      ],
+      "source": "ap",
+      "query_type": "original"
+    },
+    {
+      "id": "rag_005",
+      "query": "What did Reuters report about ships transiting the Strait of Hormuz?",
+      "relevant_chunk_ids": [
+        "b640a051b1489f2352ff7aaf001043c58f1f3c6366f93db74275ce212fe23195",
+        "de05a34e9743a9910aa24a51575f12446d683be45148c3479f1a542f2f843ae7",
+        "33beddd0c40e4d441b25fd5cb7e00c6994a621cc58950bc684ea3ca08780b8fc",
+        "91a9bb4e6007c9967a67b6c01732958eb23ca533fe25db76342f598fa4d952e5"
+      ],
+      "source": "reuters",
+      "query_type": "original"
+    },
+    {
+      "id": "rag_006",
+      "query": "What did news articles say about BJP winning West Bengal in the Indian election?",
+      "relevant_chunk_ids": [
+        "96b01472030e155e034d05a5749488500d8522e95379d4ad1413a3bc14edd32d",
+        "1fb4b1a570b4d5a50a0907317b39b3517287f9f1e5863b9b2af6bdb1e26db646",
+        "14c1608a00b273d95516adc1a7d142e15d23caa96d191fee6642738ed1696be1"
+      ],
+      "source": "bbc, ap",
+      "query_type": "original"
+    },
+    {
+      "id": "rag_007",
+      "query": "According to news reports, how is Trump's economy performing in terms of stock markets?",
+      "relevant_chunk_ids": [
+        "33beddd0c40e4d441b25fd5cb7e00c6994a621cc58950bc684ea3ca08780b8fc",
+        "91a9bb4e6007c9967a67b6c01732958eb23ca533fe25db76342f598fa4d952e5",
+        "95b0015309094ac62c36cf311ca15444e607b8fbbd483259e52da3090b030a2a"
+      ],
+      "source": "bbc, nyt",
+      "query_type": "original"
+    },
+    {
+      "id": "rag_008",
+      "query": "What did news articles report about European leaders visiting Armenia?",
+      "relevant_chunk_ids": [
+        "82a130d817321005b995a7b18a00aa3ba15070b11c42e557956c639dc3721396",
+        "2a5edf805816fe46f52bb4cab5f9c639ae3538fef4d5165d10cfd5f6f29244df",
+        "de05a34e9743a9910aa24a51575f12446d683be45148c3479f1a542f2f843ae7"
+      ],
+      "source": "bbc",
+      "query_type": "original"
+    },
+    {
+      "id": "rag_009",
+      "query": "What do news reports say about Tesla's Full Self-Driving approval challenges in Europe?",
+      "relevant_chunk_ids": [
+        "8b567f2dcda751f30a821e80b5b0ac89b740d2c2db8e9c32e9ad720050af17fb",
+        "1ae5982114ce7c62a6fdce8d09219395fd43347a8caf5a663833fd92fabf3f88",
+        "3b0828600711a6ef4daacbd900e630b7fcfff8d53a8ccc87ad170942704f0c2a",
+        "e1840f42bb14bb6a544ea3dcbfbe266e8e72e515f06564b97b766b8ab22a7726"
+      ],
+      "source": "reuters",
+      "query_type": "original"
+    },
+    {
+      "id": "rag_010",
+      "query": "What did BBC report about the UK's declining healthy life expectancy?",
+      "relevant_chunk_ids": [
+        "c3fcb60f59d6d999966dff70f5bb3c675dcbfb47768baa34be29c3f6a59f201b",
+        "4f4496f24bbd1e96bd157ec80a0adec996b61235c4b21cf3343e20ea37f7ac7d",
+        "1a6ac4be273911af2d6ffd4c973e793765e10c3668b607ea7810efe4d023d8c9",
+        "3f97a3df7af5c2e04661def0b43cea48fcf1f0abd4cbec166d9937708c145c8b"
+      ],
+      "source": "bbc",
+      "query_type": "original"
+    },
+    {
+      "id": "rag_011",
+      "query": "What did news articles report about Kenya's political violence and elections?",
+      "relevant_chunk_ids": [
+        "c468b436eac1ca4cc3bd1e6578a8a8a07b7d85bab46dd26902065c55811c8c3f",
+        "42d269e95d4c1e1ffe6f96057392457e3139785127cf3f85331abda53bbba624",
+        "96b01472030e155e034d05a5749488500d8522e95379d4ad1413a3bc14edd32d"
+      ],
+      "source": "bbc, ap",
+      "query_type": "original"
+    },
+    {
+      "id": "rag_012",
+      "query": "Find evidence about Iran attacking UAE oil facilities while US struck Iranian boats",
+      "relevant_chunk_ids": [
+        "de05a34e9743a9910aa24a51575f12446d683be45148c3479f1a542f2f843ae7",
+        "56dc738040302cc43f5d033df1813cffd73d63f46a7e6f3cd9f3cf6356dfb456",
+        "30dbd4a810a641e5b2b230c6b05c4838a0f6eb69998340eb46e25177ff1f9420"
+      ],
+      "source": "bbc, reuters",
+      "query_type": "original"
+    },
+    {
+      "id": "rag_013",
+      "query": "What do AP reports say about the ceasefire between Russia and Ukraine?",
+      "relevant_chunk_ids": [
+        "5c3f16bbf0c25cf4dae0d4be377e1dd4b584db91aee9a6dde9979fde31e3f17c",
+        "82a130d817321005b995a7b18a00aa3ba15070b11c42e557956c639dc3721396",
+        "d4cbf7590bcad0cad2756dbdfac76c6f2483f4d0d9e55f32b69bbc22086d2b3a",
+        "dd8a7f1c2cf0599050ca7eb0aa94f22782ac88427809cd0c308c796a5f9c04ed"
+      ],
+      "source": "ap",
+      "query_type": "original"
+    },
+    {
+      "id": "rag_014",
+      "query": "What did news reports say about military defense capabilities and their costs?",
+      "relevant_chunk_ids": [
+        "2a5edf805816fe46f52bb4cab5f9c639ae3538fef4d5165d10cfd5f6f29244df",
+        "30dbd4a810a641e5b2b230c6b05c4838a0f6eb69998340eb46e25177ff1f9420",
+        "de05a34e9743a9910aa24a51575f12446d683be45148c3479f1a542f2f843ae7",
+        "91a9bb4e6007c9967a67b6c01732958eb23ca533fe25db76342f598fa4d952e5",
+        "317bb920f50e46a051947aee5a32734dd03825fc0d23ce8db0378740526a2da7"
+      ],
+      "source": "bbc",
+      "query_type": "original"
+    },
+    {
+      "id": "rag_015",
+      "query": "What did Reuters report about Germany's energy policy and Russia sanctions?",
+      "relevant_chunk_ids": [
+        "82a130d817321005b995a7b18a00aa3ba15070b11c42e557956c639dc3721396",
+        "2a5edf805816fe46f52bb4cab5f9c639ae3538fef4d5165d10cfd5f6f29244df",
+        "e68658674e1f3e9141412c6764fd7fa5de607c5deb906f2961e577baa79b86e6",
+        "febcf88953b33404a09bce4d155b158950f4c3afa9eda02551091d7a5e33135a"
+      ],
+      "source": "reuters",
+      "query_type": "original"
+    },
+    {
+      "id": "rag_016",
+      "query": "What do news articles say about conspiracy theories around climate change activism?",
+      "relevant_chunk_ids": [
+        "63415c7a8bd38acacdb9b8ab03d7978185e889261af48ab990b8c3c74b7b6453",
+        "56c2ef1a03951cb0358924ad1cfdf012ca56160bef648d8bced2c26526eb6a7c",
+        "1a6ac4be273911af2d6ffd4c973e793765e10c3668b607ea7810efe4d023d8c9",
+        "3f97a3df7af5c2e04661def0b43cea48fcf1f0abd4cbec166d9937708c145c8b",
+        "11049219a545cf885373a5dd02bef1d1d204c37fab6bc9246ab7eb2f404c929c"
+      ],
+      "source": "bbc",
+      "query_type": "original"
+    },
+    {
+      "id": "rag_017",
+      "query": "What happened during the Maersk ship transit under US military escort through Hormuz?",
+      "relevant_chunk_ids": [
+        "b640a051b1489f2352ff7aaf001043c58f1f3c6366f93db74275ce212fe23195",
+        "de05a34e9743a9910aa24a51575f12446d683be45148c3479f1a542f2f843ae7",
+        "d11e5c8bfdd71b0250536caedf87ac852159f5f3789a29509195c80c81a73b70"
+      ],
+      "source": "reuters",
+      "query_type": "original"
+    },
+    {
+      "id": "rag_018",
+      "query": "What did news reports say about electric vehicle market growth?",
+      "relevant_chunk_ids": [
+        "91a9bb4e6007c9967a67b6c01732958eb23ca533fe25db76342f598fa4d952e5",
+        "7bec200718f81c5b54d6981695cfede910d7ebf5b49785b14263ead2c442a5c5",
+        "3b0828600711a6ef4daacbd900e630b7fcfff8d53a8ccc87ad170942704f0c2a",
+        "1ae5982114ce7c62a6fdce8d09219395fd43347a8caf5a663833fd92fabf3f88",
+        "317bb920f50e46a051947aee5a32734dd03825fc0d23ce8db0378740526a2da7"
+      ],
+      "source": "nyt",
+      "query_type": "original"
+    },
+    {
+      "id": "rag_019",
+      "query": "What did news articles say about media bias and misinformation?",
+      "relevant_chunk_ids": [
+        "82a130d817321005b995a7b18a00aa3ba15070b11c42e557956c639dc3721396",
+        "8049ec8da81fbf8f8b7d71334588f7d98409de90b033ea022e560099a462fecb",
+        "b05b8bc800478798c7a05330713b64e2379e8fd34a92d94dfe2481240959aa51",
+        "febcf88953b33404a09bce4d155b158950f4c3afa9eda02551091d7a5e33135a",
+        "a2196fe3a230c82389e2bb654387780fd5ee96bd47cb7a117a03b6d6010686c9"
+      ],
+      "source": "bbc",
+      "query_type": "original"
+    },
+    {
+      "id": "rag_020",
+      "query": "What do news reports say about NATO's military alliance expansion?",
+      "relevant_chunk_ids": [
+        "dd8a7f1c2cf0599050ca7eb0aa94f22782ac88427809cd0c308c796a5f9c04ed",
+        "9f5d0250833dad6117207f5cf4fe7d48e3fdd87a840fdce0313c548cdc0b5ea7",
+        "e1840f42bb14bb6a544ea3dcbfbe266e8e72e515f06564b97b766b8ab22a7726",
+        "de05a34e9743a9910aa24a51575f12446d683be45148c3479f1a542f2f843ae7",
+        "91a9bb4e6007c9967a67b6c01732958eb23ca533fe25db76342f598fa4d952e5"
+      ],
+      "source": "bbc, ap",
+      "query_type": "original"
+    },
+    {
+      "id": "rag_021",
+      "query": "What did news articles report about Trump's renewable energy policy rollbacks?",
+      "relevant_chunk_ids": [
+        "91a9bb4e6007c9967a67b6c01732958eb23ca533fe25db76342f598fa4d952e5",
+        "b256517efb618c29541b7b30bb2f73035f773763c9f4633a097e80296edab6ba",
+        "33beddd0c40e4d441b25fd5cb7e00c6994a621cc58950bc684ea3ca08780b8fc",
+        "335ad96fc8fd3f05181b2a4b7d4dc12ddb56dc7d52148ac1a2b55fb81d251ef9",
+        "30dbd4a810a641e5b2b230c6b05c4838a0f6eb69998340eb46e25177ff1f9420"
+      ],
+      "source": "nyt",
+      "query_type": "original"
+    },
+    {
+      "id": "rag_022",
+      "query": "What do news sources say about China's economy and technology competition?",
+      "relevant_chunk_ids": [
+        "56c2ef1a03951cb0358924ad1cfdf012ca56160bef648d8bced2c26526eb6a7c",
+        "33beddd0c40e4d441b25fd5cb7e00c6994a621cc58950bc684ea3ca08780b8fc",
+        "6a6dd13d2e9c2bd779412cfa97c2c6d328c70224e210a63b38fbde0e6dc34ccb",
+        "3b0828600711a6ef4daacbd900e630b7fcfff8d53a8ccc87ad170942704f0c2a",
+        "317bb920f50e46a051947aee5a32734dd03825fc0d23ce8db0378740526a2da7"
+      ],
+      "source": "reuters",
+      "query_type": "original"
+    },
+    {
+      "id": "rag_023",
+      "query": "What did news articles report about wealth disparity and inheritance tax debates?",
+      "relevant_chunk_ids": [
+        "91a9bb4e6007c9967a67b6c01732958eb23ca533fe25db76342f598fa4d952e5",
+        "c3fcb60f59d6d999966dff70f5bb3c675dcbfb47768baa34be29c3f6a59f201b",
+        "33beddd0c40e4d441b25fd5cb7e00c6994a621cc58950bc684ea3ca08780b8fc"
+      ],
+      "source": "bbc",
+      "query_type": "original"
+    },
+    {
+      "id": "rag_024",
+      "query": "What did BBC report about Iran's attack on UAE oil facilities?",
+      "relevant_chunk_ids": [
+        "de05a34e9743a9910aa24a51575f12446d683be45148c3479f1a542f2f843ae7",
+        "d11e5c8bfdd71b0250536caedf87ac852159f5f3789a29509195c80c81a73b70",
+        "33beddd0c40e4d441b25fd5cb7e00c6994a621cc58950bc684ea3ca08780b8fc",
+        "56dc738040302cc43f5d033df1813cffd73d63f46a7e6f3cd9f3cf6356dfb456"
+      ],
+      "source": "bbc",
+      "query_type": "original"
+    },
+    {
+      "id": "rag_025",
+      "query": "Find evidence that UK and Germany responded diplomatically to Iran-US conflict",
+      "relevant_chunk_ids": [
+        "82a130d817321005b995a7b18a00aa3ba15070b11c42e557956c639dc3721396",
+        "de05a34e9743a9910aa24a51575f12446d683be45148c3479f1a542f2f843ae7",
+        "30dbd4a810a641e5b2b230c6b05c4838a0f6eb69998340eb46e25177ff1f9420",
+        "91a9bb4e6007c9967a67b6c01732958eb23ca533fe25db76342f598fa4d952e5"
+      ],
+      "source": "bbc, reuters",
+      "query_type": "original"
+    },
+    {
+      "id": "rag_026",
+      "query": "What did news reports say about hantavirus transmission methods and prevention?",
+      "relevant_chunk_ids": [
+        "d44ca21c11596732406a788ac1b5c9571d2ee205a",
+        "05538fdb413af54dedb9537ac150686ae960862e2f63c330e5f2ce7354e17994",
+        "d10e3f1ccb5591cb7e098d0dfeef1dc8a2aca3e7f21e452dd49616f2439352da",
+        "00663ecccf09c2b37554057a198469ee00636eb725420c59470bb1e8d3ce73c7"
+      ],
+      "source": "bbc",
+      "query_type": "original"
+    },
+    {
+      "id": "rag_027",
+      "query": "What did the WHO say about the hantavirus outbreak on MV Hondius?",
+      "relevant_chunk_ids": [
+        "d10e3f1ccb5591cb7e098d0dfeef1dc8a2aca3e7f21e452dd49616f2439352da",
+        "8b1e066ac64c120d1df7fee24ce9f2ed83189a98dd9d9fec8fbb97dc8e31c15f",
+        "05538fdb413af54dedb9537ac150686ae960862e2f63c330e5f2ce7354e17994",
+        "00663ecccf09c2b37554057a198469ee00636eb725420c59470bb1e8d3ce73c7"
+      ],
+      "source": "bbc",
+      "query_type": "original"
+    },
+    {
+      "id": "rag_028",
+      "query": "What did news articles say about energy infrastructure and sustainability concerns?",
+      "relevant_chunk_ids": [
+        "b256517efb618c29541b7b30bb2f73035f773763c9f4633a097e80296edab6ba",
+        "33beddd0c40e4d441b25fd5cb7e00c6994a621cc58950bc684ea3ca08780b8fc",
+        "3b0828600711a6ef4daacbd900e630b7fcfff8d53a8ccc87ad170942704f0c2a",
+        "317bb920f50e46a051947aee5a32734dd03825fc0d23ce8db0378740526a2da7",
+        "e68658674e1f3e9141412c6764fd7fa5de607c5deb906f2961e577baa79b86e6"
+      ],
+      "source": "reuters",
+      "query_type": "original"
+    },
+    {
+      "id": "rag_029",
+      "query": "What did news reports say about Ukraine's air defense capabilities against Russian attacks?",
+      "relevant_chunk_ids": [
+        "dd8a7f1c2cf0599050ca7eb0aa94f22782ac88427809cd0c308c796a5f9c04ed",
+        "82a130d817321005b995a7b18a00aa3ba15070b11c42e557956c639dc3721396",
+        "5c3f16bbf0c25cf4dae0d4be377e1dd4b584db91aee9a6dde9979fde31e3f17c",
+        "d4cbf7590bcad0cad2756dbdfac76c6f2483f4d0d9e55f32b69bbc22086d2b3a"
+      ],
+      "source": "bbc, ap",
+      "query_type": "original"
+    },
+    {
+      "id": "rag_030",
+      "query": "What do news sources report about India's BJP electoral strategy using welfare politics?",
+      "relevant_chunk_ids": [
+        "96b01472030e155e034d05a5749488500d8522e95379d4ad1413a3bc14edd32d",
+        "3a12273ee266aa01fdba5706ed2e50643d9445177c703395d6fa8fd109f716dd",
+        "1fb4b1a570b4d5a50a0907317b39b3517287f9f1e5863b9b2af6bdb1e26db646"
+      ],
+      "source": "bbc, ap",
+      "query_type": "original"
+    },
+    {
+      "id": "rag_031",
+      "query": "What did news articles report about Argentina's economic crisis and Milei policies?",
+      "relevant_chunk_ids": [
+        "91a9bb4e6007c9967a67b6c01732958eb23ca533fe25db76342f598fa4d952e5",
+        "33beddd0c40e4d441b25fd5cb7e00c6994a621cc58950bc684ea3ca08780b8fc",
+        "317bb920f50e46a051947aee5a32734dd03825fc0d23ce8db0378740526a2da7",
+        "9f5d0250833dad6117207f5cf4fe7d48e3fdd87a840fdce0313c548cdc0b5ea7"
+      ],
+      "source": "reuters",
+      "query_type": "original"
+    },
+    {
+      "id": "rag_032",
+      "query": "What did news reports say about South Korea's political situation?",
+      "relevant_chunk_ids": [
+        "3a12273ee266aa01fdba5706ed2e50643d9445177c703395d6fa8fd109f716dd",
+        "1fb4b1a570b4d5a50a0907317b39b3517287f9f1e5863b9b2af6bdb1e26db646",
+        "f22255a083a98726e8e739113546e9e85396dadfc58c4c7676b1950f80e7b135",
+        "a4ba61f1b80b9dfb8cb167631ca591dd40d9bd9ac7bf6bb64bd68708c399b60b",
+        "d481febc1a170c7d4540f5d094b6ad3f328fc083c69696ce2c9ac50588ffc031"
+      ],
+      "source": "reuters, ap",
+      "query_type": "original"
+    },
+    {
+      "id": "rag_033",
+      "query": "What did news articles report about Canada's response to US trade policies?",
+      "relevant_chunk_ids": [
+        "33beddd0c40e4d441b25fd5cb7e00c6994a621cc58950bc684ea3ca08780b8fc",
+        "91a9bb4e6007c9967a67b6c01732958eb23ca533fe25db76342f598fa4d952e5",
+        "cd2a289e4fa7e8bc28efb18ea615b87993f043e617a5eb13a34081db1cfd7724",
+        "335ad96fc8fd3f05181b2a4b7d4dc12ddb56dc7d52148ac1a2b55fb81d251ef9",
+        "a2196fe3a230c82389e2bb654387780fd5ee96bd47cb7a117a03b6d6010686c9"
+      ],
+      "source": "reuters",
+      "query_type": "original"
+    },
+    {
+      "id": "rag_034",
+      "query": "What news reports discuss Israel's role in Middle East tensions?",
+      "relevant_chunk_ids": [
+        "de05a34e9743a9910aa24a51575f12446d683be45148c3479f1a542f2f843ae7",
+        "33beddd0c40e4d441b25fd5cb7e00c6994a621cc58950bc684ea3ca08780b8fc",
+        "317bb920f50e46a051947aee5a32734dd03825fc0d23ce8db0378740526a2da7",
+        "3b0828600711a6ef4daacbd900e630b7fcfff8d53a8ccc87ad170942704f0c2a"
+      ],
+      "source": "bbc",
+      "query_type": "original"
+    },
+    {
+      "id": "rag_035",
+      "query": "What did news sources say about Denmark's foreign policy stance on Russia?",
+      "relevant_chunk_ids": [
+        "82a130d817321005b995a7b18a00aa3ba15070b11c42e557956c639dc3721396",
+        "2a5edf805816fe46f52bb4cab5f9c639ae3538fef4d5165d10cfd5f6f29244df",
+        "9fddb8da025e35722a8c724a9233125d3de37bceaaff13405da85eb83c99df8e",
+        "5c3f16bbf0c25cf4dae0d4be377e1dd4b584db91aee9a6dde9979fde31e3f17c",
+        "de05a34e9743a9910aa24a51575f12446d683be45148c3479f1a542f2f843ae7"
+      ],
+      "source": "bbc",
+      "query_type": "original"
+    },
+    {
+      "id": "rag_036",
+      "query": "What did news articles say about the United Arab Emirates role in oil conflict?",
+      "relevant_chunk_ids": [
+        "de05a34e9743a9910aa24a51575f12446d683be45148c3479f1a542f2f843ae7",
+        "b640a051b1489f2352ff7aaf001043c58f1f3c6366f93db74275ce212fe23195",
+        "335ad96fc8fd3f05181b2a4b7d4dc12ddb56dc7d52148ac1a2b55fb81d251ef9",
+        "56dc738040302cc43f5d033df1813cffd73d63f46a7e6f3cd9f3cf6356dfb456"
+      ],
+      "source": "bbc, reuters",
+      "query_type": "original"
+    },
+    {
+      "id": "rag_037",
+      "query": "What news reports discuss Europe's energy independence initiatives?",
+      "relevant_chunk_ids": [
+        "b256517efb618c29541b7b30bb2f73035f773763c9f4633a097e80296edab6ba",
+        "82a130d817321005b995a7b18a00aa3ba15070b11c42e557956c639dc3721396",
+        "3b0828600711a6ef4daacbd900e630b7fcfff8d53a8ccc87ad170942704f0c2a",
+        "6a6dd13d2e9c2bd779412cfa97c2c6d328c70224e210a63b38fbde0e6dc34ccb",
+        "e68658674e1f3e9141412c6764fd7fa5de607c5deb906f2961e577baa79b86e6"
+      ],
+      "source": "reuters, bbc",
+      "query_type": "original"
+    },
+    {
+      "id": "rag_038",
+      "query": "What did news articles report about corporate political manipulation tactics?",
+      "relevant_chunk_ids": [
+        "82a130d817321005b995a7b18a00aa3ba15070b11c42e557956c639dc3721396",
+        "8049ec8da81fbf8f8b7d71334588f7d98409de90b033ea022e560099a462fecb",
+        "3b0828600711a6ef4daacbd900e630b7fcfff8d53a8ccc87ad170942704f0c2a",
+        "6a6dd13d2e9c2bd779412cfa97c2c6d328c70224e210a63b38fbde0e6dc34ccb",
+        "33beddd0c40e4d441b25fd5cb7e00c6994a621cc58950bc684ea3ca08780b8fc"
+      ],
+      "source": "bbc",
+      "query_type": "original"
+    },
+    {
+      "id": "rag_039",
+      "query": "What did news reports say about autonomous vehicle regulations globally?",
+      "relevant_chunk_ids": [
+        "8b567f2dcda751f30a821e80b5b0ac89b740d2c2db8e9c32e9ad720050af17fb",
+        "1ae5982114ce7c62a6fdce8d09219395fd43347a8caf5a663833fd92fabf3f88",
+        "3b0828600711a6ef4daacbd900e630b7fcfff8d53a8ccc87ad170942704f0c2a",
+        "a4ba61f1b80b9dfb8cb167631ca591dd40d9bd9ac7bf6bb64bd68708c399b60b",
+        "fbe7c60b16d9e3a3bc00be39c440fa6ec003b410f339d9ed74b58de49bcd7337"
+      ],
+      "source": "reuters",
+      "query_type": "original"
+    },
+    {
+      "id": "rag_040",
+      "query": "What do news sources say about the Islamic Revolutionary Guard Corps operations?",
+      "relevant_chunk_ids": [
+        "de05a34e9743a9910aa24a51575f12446d683be45148c3479f1a542f2f843ae7",
+        "56dc738040302cc43f5d033df1813cffd73d63f46a7e6f3cd9f3cf6356dfb456",
+        "9771621dbf34ad6ea4d9087227b408a15bb76f080416e81375d3144e69575fbd"
+      ],
+      "source": "bbc, reuters",
+      "query_type": "original"
+    },
+    {
+      "id": "rag_041",
+      "query": "What specific events led to the US military striking Iranian fast boats in the Gulf?",
+      "relevant_chunk_ids": [
+        "de05a34e9743a9910aa24a51575f12446d683be45148c3479f1a542f2f843ae7",
+        "56dc738040302cc43f5d033df1813cffd73d63f46a7e6f3cd9f3cf6356dfb456",
+        "b640a051b1489f2352ff7aaf001043c58f1f3c6366f93db74275ce212fe23195"
+      ],
+      "source": "bbc, reuters",
+      "query_type": "hard"
+    },
+    {
+      "id": "rag_042",
+      "query": "What air defense systems did Ukraine use to intercept drones over Moscow?",
+      "relevant_chunk_ids": [
+        "dd8a7f1c2cf0599050ca7eb0aa94f22782ac88427809cd0c308c796a5f9c04ed",
+        "5c3f16bbf0c25cf4dae0d4be377e1dd4b584db91aee9a6dde9979fde31e3f17c",
+        "82a130d817321005b995a7b18a00aa3ba15070b11c42e557956c639dc3721396"
+      ],
+      "source": "bbc, nyt",
+      "query_type": "hard"
+    },
+    {
+      "id": "rag_043",
+      "query": "What was the specific Victory Day significance of Russia's truce announcement?",
+      "relevant_chunk_ids": [
+        "5c3f16bbf0c25cf4dae0d4be377e1dd4b584db91aee9a6dde9979fde31e3f17c",
+        "dd8a7f1c2cf0599050ca7eb0aa94f22782ac88427809cd0c308c796a5f9c04ed",
+        "9fddb8da025e35722a8c724a9233125d3de37bceaaff13405da85eb83c99df8e"
+      ],
+      "source": "ap",
+      "query_type": "hard"
+    },
+    {
+      "id": "rag_044",
+      "query": "What regulatory hurdles did Tesla face for FSD approval in European markets?",
+      "relevant_chunk_ids": [
+        "8b567f2dcda751f30a821e80b5b0ac89b740d2c2db8e9c32e9ad720050af17fb",
+        "1ae5982114ce7c62a6fdce8d09219395fd43347a8caf5a663833fd92fabf3f88",
+        "56c2ef1a03951cb0358924ad1cfdf012ca56160bef648d8bced2c26526eb6a7c"
+      ],
+      "source": "reuters",
+      "query_type": "hard"
+    },
+    {
+      "id": "rag_045",
+      "query": "What was the exact health statistic about UK's declining healthy life expectancy in the past decade?",
+      "relevant_chunk_ids": [
+        "c3fcb60f59d6d999966dff70f5bb3c675dcbfb47768baa34be29c3f6a59f201b",
+        "4f4496f24bbd1e96bd157ec80a0adec996b61235c4b21cf3343e20ea37f7ac7d",
+        "15d94d086a3f9f41b11f9b84535747433a2ad41a85a86670648c28a2934e44af"
+      ],
+      "source": "bbc",
+      "query_type": "hard"
+    },
+    {
+      "id": "rag_046",
+      "query": "What specific weapons or tactics did Iran's IRGC use in Strait of Hormuz confrontations?",
+      "relevant_chunk_ids": [
+        "de05a34e9743a9910aa24a51575f12446d683be45148c3479f1a542f2f843ae7",
+        "33beddd0c40e4d441b25fd5cb7e00c6994a621cc58950bc684ea3ca08780b8fc",
+        "56dc738040302cc43f5d033df1813cffd73d63f46a7e6f3cd9f3cf6356dfb456"
+      ],
+      "source": "bbc",
+      "query_type": "hard"
+    },
+    {
+      "id": "rag_047",
+      "query": "What specific neighborhoods or buildings in Moscow were hit by Ukrainian drones?",
+      "relevant_chunk_ids": [
+        "dd8a7f1c2cf0599050ca7eb0aa94f22782ac88427809cd0c308c796a5f9c04ed",
+        "5c3f16bbf0c25cf4dae0d4be377e1dd4b584db91aee9a6dde9979fde31e3f17c",
+        "d4cbf7590bcad0cad2756dbdfac76c6f2483f4d0d9e55f32b69bbc22086d2b3a",
+        "82a130d817321005b995a7b18a00aa3ba15070b11c42e557956c639dc3721396"
+      ],
+      "source": "bbc, nyt",
+      "query_type": "hard"
+    },
+    {
+      "id": "rag_048",
+      "query": "What was the ODM party's internal split over President Ruto's support in Kenya?",
+      "relevant_chunk_ids": [
+        "c468b436eac1ca4cc3bd1e6578a8a8a07b7d85bab46dd26902065c55811c8c3f",
+        "42d269e95d4c1e1ffe6f96057392457e3139785127cf3f85331abda53bbba624",
+        "14c1608a00b273d95516adc1a7d142e15d23caa96d191fee6642738ed1696be1"
+      ],
+      "source": "bbc",
+      "query_type": "hard"
+    },
+    {
+      "id": "rag_049",
+      "query": "What hybrid threat mechanisms did Russia use against Armenia after the EU summits?",
+      "relevant_chunk_ids": [
+        "82a130d817321005b995a7b18a00aa3ba15070b11c42e557956c639dc3721396",
+        "2a5edf805816fe46f52bb4cab5f9c639ae3538fef4d5165d10cfd5f6f29244df",
+        "d4cbf7590bcad0cad2756dbdfac76c6f2483f4d0d9e55f32b69bbc22086d2b3a"
+      ],
+      "source": "bbc",
+      "query_type": "hard"
+    },
+    {
+      "id": "rag_050",
+      "query": "What specific stock indices data showed Trump's economic recovery from war losses?",
+      "relevant_chunk_ids": [
+        "33beddd0c40e4d441b25fd5cb7e00c6994a621cc58950bc684ea3ca08780b8fc",
+        "91a9bb4e6007c9967a67b6c01732958eb23ca533fe25db76342f598fa4d952e5",
+        "3aede5b5b41e65388ef1ebb7c5bde2cb1363fc20f848e9af87dbee260b97a56d"
+      ],
+      "source": "bbc, nyt",
+      "query_type": "hard"
+    },
+    {
+      "id": "rag_051",
+      "query": "What specific welfare programs did BJP use to win West Bengal for the first time?",
+      "relevant_chunk_ids": [
+        "96b01472030e155e034d05a5749488500d8522e95379d4ad1413a3bc14edd32d",
+        "1fb4b1a570b4d5a50a0907317b39b3517287f9f1e5863b9b2af6bdb1e26db646",
+        "3a12273ee266aa01fdba5706ed2e50643d9445177c703395d6fa8fd109f716dd"
+      ],
+      "source": "bbc, ap",
+      "query_type": "hard"
+    },
+    {
+      "id": "rag_052",
+      "query": "What was the second confirmed hantavirus case details from BBC coverage?",
+      "relevant_chunk_ids": [
+        "d10e3f1ccb5591cb7e098d0dfeef1dc8a2aca3e7f21e452dd49616f2439352da",
+        "05538fdb413af54dedb9537ac150686ae960862e2f63c330e5f2ce7354e17994",
+        "8b1e066ac64c120d1df7fee24ce9f2ed83189a98dd9d9fec8fbb97dc8e31c15f"
+      ],
+      "source": "bbc",
+      "query_type": "hard"
+    },
+    {
+      "id": "rag_053",
+      "query": "What was Putin's stated reason for the 72-hour ceasefire during Victory Day?",
+      "relevant_chunk_ids": [
+        "5c3f16bbf0c25cf4dae0d4be377e1dd4b584db91aee9a6dde9979fde31e3f17c",
+        "dd8a7f1c2cf0599050ca7eb0aa94f22782ac88427809cd0c308c796a5f9c04ed",
+        "82a130d817321005b995a7b18a00aa3ba15070b11c42e557956c639dc3721396"
+      ],
+      "source": "ap",
+      "query_type": "hard"
+    },
+    {
+      "id": "rag_054",
+      "query": "What oil facility was specifically targeted by Iran during the Hormuz conflict?",
+      "relevant_chunk_ids": [
+        "de05a34e9743a9910aa24a51575f12446d683be45148c3479f1a542f2f843ae7",
+        "b640a051b1489f2352ff7aaf001043c58f1f3c6366f93db74275ce212fe23195",
+        "56dc738040302cc43f5d033df1813cffd73d63f46a7e6f3cd9f3cf6356dfb456"
+      ],
+      "source": "bbc",
+      "query_type": "hard"
+    },
+    {
+      "id": "rag_055",
+      "query": "How did the UK and Germany respond specifically to the Strait of Hormuz military escalation?",
+      "relevant_chunk_ids": [
+        "82a130d817321005b995a7b18a00aa3ba15070b11c42e557956c639dc3721396",
+        "de05a34e9743a9910aa24a51575f12446d683be45148c3479f1a542f2f843ae7",
+        "2a5edf805816fe46f52bb4cab5f9c639ae3538fef4d5165d10cfd5f6f29244df"
+      ],
+      "source": "bbc, reuters",
+      "query_type": "hard"
+    },
+    {
+      "id": "rag_056",
+      "query": "What news articles cover both Iran-US tensions and energy security concerns?",
+      "relevant_chunk_ids": [
+        "de05a34e9743a9910aa24a51575f12446d683be45148c3479f1a542f2f843ae7",
+        "b256517efb618c29541b7b30bb2f73035f773763c9f4633a097e80296edab6ba",
+        "33beddd0c40e4d441b25fd5cb7e00c6994a621cc58950bc684ea3ca08780b8fc"
+      ],
+      "source": "bbc, reuters",
+      "query_type": "hard"
+    },
+    {
+      "id": "rag_057",
+      "query": "What did news reports say about Trump's withdrawal from renewable energy commitments?",
+      "relevant_chunk_ids": [
+        "91a9bb4e6007c9967a67b6c01732958eb23ca533fe25db76342f598fa4d952e5",
+        "b256517efb618c29541b7b30bb2f73035f773763c9f4633a097e80296edab6ba",
+        "33beddd0c40e4d441b25fd5cb7e00c6994a621cc58950bc684ea3ca08780b8fc"
+      ],
+      "source": "nyt",
+      "query_type": "hard"
+    },
+    {
+      "id": "rag_058",
+      "query": "What did news reports say about Russia's energy sanctions impact on Germany?",
+      "relevant_chunk_ids": [
+        "82a130d817321005b995a7b18a00aa3ba15070b11c42e557956c639dc3721396",
+        "2a5edf805816fe46f52bb4cab5f9c639ae3538fef4d5165d10cfd5f6f29244df",
+        "b256517efb618c29541b7b30bb2f73035f773763c9f4633a097e80296edab6ba",
+        "dd8a7f1c2cf0599050ca7eb0aa94f22782ac88427809cd0c308c796a5f9c04ed",
+        "fe6110fb51b2a78459782ff0dcba098a8255d77d718102216c77e6b8881f78c4",
+        "317bb920f50e46a051947aee5a32734dd03825fc0d23ce8db0378740526a2da7"
+      ],
+      "source": "reuters, bbc",
+      "query_type": "hard"
+    },
+    {
+      "id": "rag_059",
+      "query": "What specific health statistics did BBC's health editor discuss about NHS and life expectancy?",
+      "relevant_chunk_ids": [
+        "c3fcb60f59d6d999966dff70f5bb3c675dcbfb47768baa34be29c3f6a59f201b",
+        "4f4496f24bbd1e96bd157ec80a0adec996b61235c4b21cf3343e20ea37f7ac7d",
+        "15d94d086a3f9f41b11f9b84535747433a2ad41a85a86670648c28a2934e44af",
+        "27e8908da28127b3eef7bf53eb871c53715c50d3b9757bd6f7c6eae40c265161",
+        "63fadadc31f5ae2b6d3373060e4b63d065db387ccc8a509d723a95952bae963a",
+        "9b5452100b632fdb8b0e08e94878ef659121ceaa0f1e42c1aa30fdccc8c4f5dd"
+      ],
+      "source": "bbc",
+      "query_type": "hard"
+    },
+    {
+      "id": "rag_060",
+      "query": "What did news reports say about US Navy operations in the Persian Gulf?",
+      "relevant_chunk_ids": [
+        "de05a34e9743a9910aa24a51575f12446d683be45148c3479f1a542f2f843ae7",
+        "30dbd4a810a641e5b2b230c6b05c4838a0f6eb69998340eb46e25177ff1f9420",
+        "b640a051b1489f2352ff7aaf001043c58f1f3c6366f93db74275ce212fe23195",
+        "d11e5c8bfdd71b0250536caedf87ac852159f5f3789a29509195c80c81a73b70"
+      ],
+      "source": "reuters, bbc",
+      "query_type": "hard"
+    },
+    {
+      "id": "rag_061",
+      "query": "What do news articles say about IRGC tactics and operations against commercial shipping?",
+      "relevant_chunk_ids": [
+        "de05a34e9743a9910aa24a51575f12446d683be45148c3479f1a542f2f843ae7",
+        "56dc738040302cc43f5d033df1813cffd73d63f46a7e6f3cd9f3cf6356dfb456",
+        "d481febc1a170c7d4540f5d094b6ad3f328fc083c69696ce2c9ac50588ffc031",
+        "91a9bb4e6007c9967a67b6c01732958eb23ca533fe25db76342f598fa4d952e5",
+        "317bb920f50e46a051947aee5a32734dd03825fc0d23ce8db0378740526a2da7"
+      ],
+      "source": "bbc",
+      "query_type": "hard"
+    },
+    {
+      "id": "rag_062",
+      "query": "What news reports discuss Ukraine's Victory Day ceasefire announcement and timing?",
+      "relevant_chunk_ids": [
+        "5c3f16bbf0c25cf4dae0d4be377e1dd4b584db91aee9a6dde9979fde31e3f17c",
+        "dd8a7f1c2cf0599050ca7eb0aa94f22782ac88427809cd0c308c796a5f9c04ed",
+        "82a130d817321005b995a7b18a00aa3ba15070b11c42e557956c639dc3721396",
+        "de05a34e9743a9910aa24a51575f12446d683be45148c3479f1a542f2f843ae7"
+      ],
+      "source": "ap, bbc",
+      "query_type": "hard"
+    },
+    {
+      "id": "rag_063",
+      "query": "What specific BJP Hindu consolidation strategies did news reports describe for West Bengal?",
+      "relevant_chunk_ids": [
+        "96b01472030e155e034d05a5749488500d8522e95379d4ad1413a3bc14edd32d",
+        "1fb4b1a570b4d5a50a0907317b39b3517287f9f1e5863b9b2af6bdb1e26db646",
+        "3a12273ee266aa01fdba5706ed2e50643d9445177c703395d6fa8fd109f716dd"
+      ],
+      "source": "bbc, ap",
+      "query_type": "hard"
+    },
+    {
+      "id": "rag_064",
+      "query": "What did news articles report about Zelensky's response to Russia's truce offer?",
+      "relevant_chunk_ids": [
+        "5c3f16bbf0c25cf4dae0d4be377e1dd4b584db91aee9a6dde9979fde31e3f17c",
+        "dd8a7f1c2cf0599050ca7eb0aa94f22782ac88427809cd0c308c796a5f9c04ed",
+        "2a5edf805816fe46f52bb4cab5f9c639ae3538fef4d5165d10cfd5f6f29244df"
+      ],
+      "source": "bbc, ap",
+      "query_type": "hard"
+    },
+    {
+      "id": "rag_065",
+      "query": "What news reports discuss Kremlin propaganda and information warfare tactics?",
+      "relevant_chunk_ids": [
+        "82a130d817321005b995a7b18a00aa3ba15070b11c42e557956c639dc3721396",
+        "63415c7a8bd38acacdb9b8ab03d7978185e889261af48ab990b8c3c74b7b6453",
+        "8049ec8da81fbf8f8b7d71334588f7d98409de90b033ea022e560099a462fecb",
+        "dd8a7f1c2cf0599050ca7eb0aa94f22782ac88427809cd0c308c796a5f9c04ed",
+        "febcf88953b33404a09bce4d155b158950f4c3afa9eda02551091d7a5e33135a",
+        "6a6dd13d2e9c2bd779412cfa97c2c6d328c70224e210a63b38fbde0e6dc34ccb"
+      ],
+      "source": "bbc",
+      "query_type": "hard"
+    },
+    {
+      "id": "rag_066",
+      "query": "What news articles cover Zelensky's diplomatic outreach to European capitals?",
+      "relevant_chunk_ids": [
+        "5c3f16bbf0c25cf4dae0d4be377e1dd4b584db91aee9a6dde9979fde31e3f17c",
+        "82a130d817321005b995a7b18a00aa3ba15070b11c42e557956c639dc3721396",
+        "dd8a7f1c2cf0599050ca7eb0aa94f22782ac88427809cd0c308c796a5f9c04ed",
+        "56dc738040302cc43f5d033df1813cffd73d63f46a7e6f3cd9f3cf6356dfb456",
+        "b44dd4489d2f9331391102ab583f59772848ed6ec500d84f7739e8ec81388b6f"
+      ],
+      "source": "bbc",
+      "query_type": "hard"
+    },
+    {
+      "id": "rag_067",
+      "query": "What articles cover the ceasefire skepticism from Ukraine's side?",
+      "relevant_chunk_ids": [
+        "5c3f16bbf0c25cf4dae0d4be377e1dd4b584db91aee9a6dde9979fde31e3f17c",
+        "dd8a7f1c2cf0599050ca7eb0aa94f22782ac88427809cd0c308c796a5f9c04ed",
+        "de05a34e9743a9910aa24a51575f12446d683be45148c3479f1a542f2f843ae7",
+        "335ad96fc8fd3f05181b2a4b7d4dc12ddb56dc7d52148ac1a2b55fb81d251ef9"
+      ],
+      "source": "bbc, ap",
+      "query_type": "hard"
+    },
+    {
+      "id": "rag_068",
+      "query": "What news articles discuss Putin's Victory Day parade amid the Ukraine war?",
+      "relevant_chunk_ids": [
+        "5c3f16bbf0c25cf4dae0d4be377e1dd4b584db91aee9a6dde9979fde31e3f17c",
+        "dd8a7f1c2cf0599050ca7eb0aa94f22782ac88427809cd0c308c796a5f9c04ed",
+        "9fddb8da025e35722a8c724a9233125d3de37bceaaff13405da85eb83c99df8e",
+        "e68658674e1f3e9141412c6764fd7fa5de607c5deb906f2961e577baa79b86e6"
+      ],
+      "source": "bbc",
+      "query_type": "hard"
+    },
+    {
+      "id": "rag_069",
+      "query": "What news articles discuss Israel's geopolitical role in the Middle East tensions?",
+      "relevant_chunk_ids": [
+        "de05a34e9743a9910aa24a51575f12446d683be45148c3479f1a542f2f843ae7",
+        "33beddd0c40e4d441b25fd5cb7e00c6994a621cc58950bc684ea3ca08780b8fc",
+        "56dc738040302cc43f5d033df1813cffd73d63f46a7e6f3cd9f3cf6356dfb456",
+        "317bb920f50e46a051947aee5a32734dd03825fc0d23ce8db0378740526a2da7"
+      ],
+      "source": "bbc",
+      "query_type": "hard"
+    },
+    {
+      "id": "rag_070",
+      "query": "What news reports discuss the entity called Kremlin in relations with Europe?",
+      "relevant_chunk_ids": [
+        "5c3f16bbf0c25cf4dae0d4be377e1dd4b584db91aee9a6dde9979fde31e3f17c",
+        "82a130d817321005b995a7b18a00aa3ba15070b11c42e557956c639dc3721396",
+        "dd8a7f1c2cf0599050ca7eb0aa94f22782ac88427809cd0c308c796a5f9c04ed",
+        "de05a34e9743a9910aa24a51575f12446d683be45148c3479f1a542f2f843ae7",
+        "2a5edf805816fe46f52bb4cab5f9c639ae3538fef4d5165d10cfd5f6f29244df"
+      ],
+      "source": "bbc, ap",
+      "query_type": "hard"
+    },
+    {
+      "id": "rag_071",
+      "query": "What news articles discuss both Ukraine conflict and European energy policy?",
+      "relevant_chunk_ids": [
+        "dd8a7f1c2cf0599050ca7eb0aa94f22782ac88427809cd0c308c796a5f9c04ed",
+        "b256517efb618c29541b7b30bb2f73035f773763c9f4633a097e80296edab6ba",
+        "82a130d817321005b995a7b18a00aa3ba15070b11c42e557956c639dc3721396",
+        "febcf88953b33404a09bce4d155b158950f4c3afa9eda02551091d7a5e33135a",
+        "e68658674e1f3e9141412c6764fd7fa5de607c5deb906f2961e577baa79b86e6",
+        "91a9bb4e6007c9967a67b6c01732958eb23ca533fe25db76342f598fa4d952e5"
+      ],
+      "source": "bbc, reuters",
+      "query_type": "multi_chunk"
+    },
+    {
+      "id": "rag_072",
+      "query": "What news coverage discusses both Iran-US conflict and Trump's economic policies?",
+      "relevant_chunk_ids": [
+        "de05a34e9743a9910aa24a51575f12446d683be45148c3479f1a542f2f843ae7",
+        "33beddd0c40e4d441b25fd5cb7e00c6994a621cc58950bc684ea3ca08780b8fc",
+        "91a9bb4e6007c9967a67b6c01732958eb23ca533fe25db76342f598fa4d952e5",
+        "30dbd4a810a641e5b2b230c6b05c4838a0f6eb69998340eb46e25177ff1f9420"
+      ],
+      "source": "bbc, nyt",
+      "query_type": "multi_chunk"
+    },
+    {
+      "id": "rag_073",
+      "query": "What articles cover both hantavirus public health crisis and NHS health system concerns?",
+      "relevant_chunk_ids": [
+        "d10e3f1ccb5591cb7e098d0dfeef1dc8a2aca3e7f21e452dd49616f2439352da",
+        "c3fcb60f59d6d999966dff70f5bb3c675dcbfb47768baa34be29c3f6a59f201b",
+        "4f4496f24bbd1e96bd157ec80a0adec996b61235c4b21cf3343e20ea37f7ac7d",
+        "3942cfabb5cf6caa0b118f123ac26368de31f80348f7948656e13fc3ab7907de",
+        "1beb4f3fb7559610b050197ee574e359d2f651df0556c49ae7e52da1ccb3546b"
+      ],
+      "source": "bbc",
+      "query_type": "multi_chunk"
+    },
+    {
+      "id": "rag_074",
+      "query": "Find news articles covering both Tesla self-driving technology and electric vehicle market growth",
+      "relevant_chunk_ids": [
+        "8b567f2dcda751f30a821e80b5b0ac89b740d2c2db8e9c32e9ad720050af17fb",
+        "7bec200718f81c5b54d6981695cfede910d7ebf5b49785b14263ead2c442a5c5",
+        "1ae5982114ce7c62a6fdce8d09219395fd43347a8caf5a663833fd92fabf3f88",
+        "33beddd0c40e4d441b25fd5cb7e00c6994a621cc58950bc684ea3ca08780b8fc"
+      ],
+      "source": "reuters, nyt",
+      "query_type": "multi_chunk"
+    },
+    {
+      "id": "rag_075",
+      "query": "What articles discuss both Russian military operations in Ukraine and NATO's response?",
+      "relevant_chunk_ids": [
+        "dd8a7f1c2cf0599050ca7eb0aa94f22782ac88427809cd0c308c796a5f9c04ed",
+        "9f5d0250833dad6117207f5cf4fe7d48e3fdd87a840fdce0313c548cdc0b5ea7",
+        "5c3f16bbf0c25cf4dae0d4be377e1dd4b584db91aee9a6dde9979fde31e3f17c",
+        "d4cbf7590bcad0cad2756dbdfac76c6f2483f4d0d9e55f32b69bbc22086d2b3a"
+      ],
+      "source": "bbc, ap",
+      "query_type": "multi_chunk"
+    },
+    {
+      "id": "rag_076",
+      "query": "What articles discuss both India's election outcome and geopolitical tensions in Asia?",
+      "relevant_chunk_ids": [
+        "96b01472030e155e034d05a5749488500d8522e95379d4ad1413a3bc14edd32d",
+        "1fb4b1a570b4d5a50a0907317b39b3517287f9f1e5863b9b2af6bdb1e26db646",
+        "3a12273ee266aa01fdba5706ed2e50643d9445177c703395d6fa8fd109f716dd",
+        "317bb920f50e46a051947aee5a32734dd03825fc0d23ce8db0378740526a2da7"
+      ],
+      "source": "bbc, ap",
+      "query_type": "multi_chunk"
+    },
+    {
+      "id": "rag_077",
+      "query": "Find coverage discussing both Kenya protests and broader African political instability",
+      "relevant_chunk_ids": [
+        "c468b436eac1ca4cc3bd1e6578a8a8a07b7d85bab46dd26902065c55811c8c3f",
+        "42d269e95d4c1e1ffe6f96057392457e3139785127cf3f85331abda53bbba624",
+        "2d529b9df7b9e4c5e50c79e78bf3d5debc23d228b2365bb0a2bc5fa47467dcfa"
+      ],
+      "source": "bbc",
+      "query_type": "multi_chunk"
+    },
+    {
+      "id": "rag_078",
+      "query": "What news coverage addresses both Armenia's European pivot and Russia's hybrid warfare tactics?",
+      "relevant_chunk_ids": [
+        "82a130d817321005b995a7b18a00aa3ba15070b11c42e557956c639dc3721396",
+        "2a5edf805816fe46f52bb4cab5f9c639ae3538fef4d5165d10cfd5f6f29244df",
+        "dd8a7f1c2cf0599050ca7eb0aa94f22782ac88427809cd0c308c796a5f9c04ed",
+        "5c3f16bbf0c25cf4dae0d4be377e1dd4b584db91aee9a6dde9979fde31e3f17c"
+      ],
+      "source": "bbc",
+      "query_type": "multi_chunk"
+    },
+    {
+      "id": "rag_079",
+      "query": "What articles discuss both wealth inequality trends and government tax policy responses?",
+      "relevant_chunk_ids": [
+        "91a9bb4e6007c9967a67b6c01732958eb23ca533fe25db76342f598fa4d952e5",
+        "c3fcb60f59d6d999966dff70f5bb3c675dcbfb47768baa34be29c3f6a59f201b",
+        "5f72603d0f472f120849b7a36e8bb063de7e9d21a7d6ae6c887a585427fa1260",
+        "6a6dd13d2e9c2bd779412cfa97c2c6d328c70224e210a63b38fbde0e6dc34ccb"
+      ],
+      "source": "bbc",
+      "query_type": "multi_chunk"
+    },
+    {
+      "id": "rag_080",
+      "query": "Find articles covering both climate change conspiracy theories and energy independence debates",
+      "relevant_chunk_ids": [
+        "63415c7a8bd38acacdb9b8ab03d7978185e889261af48ab990b8c3c74b7b6453",
+        "b256517efb618c29541b7b30bb2f73035f773763c9f4633a097e80296edab6ba",
+        "33beddd0c40e4d441b25fd5cb7e00c6994a621cc58950bc684ea3ca08780b8fc",
+        "e68658674e1f3e9141412c6764fd7fa5de607c5deb906f2961e577baa79b86e6",
+        "91a9bb4e6007c9967a67b6c01732958eb23ca533fe25db76342f598fa4d952e5"
+      ],
+      "source": "bbc",
+      "query_type": "multi_chunk"
+    },
+    {
+      "id": "rag_081",
+      "query": "Find articles covering both Iran tensions and oil price fluctuations",
+      "relevant_chunk_ids": [
+        "de05a34e9743a9910aa24a51575f12446d683be45148c3479f1a542f2f843ae7",
+        "b256517efb618c29541b7b30bb2f73035f773763c9f4633a097e80296edab6ba",
+        "33beddd0c40e4d441b25fd5cb7e00c6994a621cc58950bc684ea3ca08780b8fc",
+        "91a9bb4e6007c9967a67b6c01732958eb23ca533fe25db76342f598fa4d952e5",
+        "30dbd4a810a641e5b2b230c6b05c4838a0f6eb69998340eb46e25177ff1f9420"
+      ],
+      "source": "reuters, bbc",
+      "query_type": "multi_chunk"
+    },
+    {
+      "id": "rag_082",
+      "query": "What articles cover both Moscow drone strikes and ceasefire violations in Ukraine?",
+      "relevant_chunk_ids": [
+        "dd8a7f1c2cf0599050ca7eb0aa94f22782ac88427809cd0c308c796a5f9c04ed",
+        "5c3f16bbf0c25cf4dae0d4be377e1dd4b584db91aee9a6dde9979fde31e3f17c",
+        "82a130d817321005b995a7b18a00aa3ba15070b11c42e557956c639dc3721396",
+        "d4cbf7590bcad0cad2756dbdfac76c6f2483f4d0d9e55f32b69bbc22086d2b3a"
+      ],
+      "source": "bbc, nyt",
+      "query_type": "multi_chunk"
+    },
+    {
+      "id": "rag_083",
+      "query": "Find articles discussing both India elections and democracy concerns in Asia",
+      "relevant_chunk_ids": [
+        "96b01472030e155e034d05a5749488500d8522e95379d4ad1413a3bc14edd32d",
+        "1fb4b1a570b4d5a50a0907317b39b3517287f9f1e5863b9b2af6bdb1e26db646",
+        "3a12273ee266aa01fdba5706ed2e50643d9445177c703395d6fa8fd109f716dd",
+        "42d269e95d4c1e1ffe6f96057392457e3139785127cf3f85331abda53bbba624"
+      ],
+      "source": "bbc, ap",
+      "query_type": "multi_chunk"
+    },
+    {
+      "id": "rag_084",
+      "query": "What news coverage addresses both EV adoption and energy grid sustainability?",
+      "relevant_chunk_ids": [
+        "7bec200718f81c5b54d6981695cfede910d7ebf5b49785b14263ead2c442a5c5",
+        "b256517efb618c29541b7b30bb2f73035f773763c9f4633a097e80296edab6ba",
+        "33beddd0c40e4d441b25fd5cb7e00c6994a621cc58950bc684ea3ca08780b8fc",
+        "e68658674e1f3e9141412c6764fd7fa5de607c5deb906f2961e577baa79b86e6",
+        "febcf88953b33404a09bce4d155b158950f4c3afa9eda02551091d7a5e33135a",
+        "c468b436eac1ca4cc3bd1e6578a8a8a07b7d85bab46dd26902065c55811c8c3f"
+      ],
+      "source": "reuters, nyt",
+      "query_type": "multi_chunk"
+    },
+    {
+      "id": "rag_085",
+      "query": "What articles cover both Trump's economic policies and renewable energy rollbacks?",
+      "relevant_chunk_ids": [
+        "91a9bb4e6007c9967a67b6c01732958eb23ca533fe25db76342f598fa4d952e5",
+        "b256517efb618c29541b7b30bb2f73035f773763c9f4633a097e80296edab6ba",
+        "33beddd0c40e4d441b25fd5cb7e00c6994a621cc58950bc684ea3ca08780b8fc",
+        "cd2a289e4fa7e8bc28efb18ea615b87993f043e617a5eb13a34081db1cfd7724"
+      ],
+      "source": "nyt, bbc",
+      "query_type": "multi_chunk"
+    },
+    {
+      "id": "rag_086",
+      "query": "Find news articles about both hantavirus containment efforts and WHO international response",
+      "relevant_chunk_ids": [
+        "d10e3f1ccb5591cb7e098d0dfeef1dc8a2aca3e7f21e452dd49616f2439352da",
+        "05538fdb413af54dedb9537ac150686ae960862e2f63c330e5f2ce7354e17994",
+        "8b1e066ac64c120d1df7fee24ce9f2ed83189a98dd9d9fec8fbb97dc8e31c15f",
+        "00663ecccf09c2b37554057a198469ee00636eb725420c59470bb1e8d3ce73c7"
+      ],
+      "source": "bbc",
+      "query_type": "multi_chunk"
+    },
+    {
+      "id": "rag_087",
+      "query": "What articles discuss both US-UK diplomatic coordination and Strait of Hormuz security?",
+      "relevant_chunk_ids": [
+        "de05a34e9743a9910aa24a51575f12446d683be45148c3479f1a542f2f843ae7",
+        "b640a051b1489f2352ff7aaf001043c58f1f3c6366f93db74275ce212fe23195",
+        "82a130d817321005b995a7b18a00aa3ba15070b11c42e557956c639dc3721396",
+        "30dbd4a810a641e5b2b230c6b05c4838a0f6eb69998340eb46e25177ff1f9420",
+        "33beddd0c40e4d441b25fd5cb7e00c6994a621cc58950bc684ea3ca08780b8fc"
+      ],
+      "source": "bbc, reuters",
+      "query_type": "multi_chunk"
+    },
+    {
+      "id": "rag_088",
+      "query": "Find articles covering both Russian hybrid warfare tactics and European security responses",
+      "relevant_chunk_ids": [
+        "82a130d817321005b995a7b18a00aa3ba15070b11c42e557956c639dc3721396",
+        "2a5edf805816fe46f52bb4cab5f9c639ae3538fef4d5165d10cfd5f6f29244df",
+        "dd8a7f1c2cf0599050ca7eb0aa94f22782ac88427809cd0c308c796a5f9c04ed"
+      ],
+      "source": "bbc",
+      "query_type": "multi_chunk"
+    },
+    {
+      "id": "rag_089",
+      "query": "What news coverage discusses both anti-media sentiment and disinformation spread online?",
+      "relevant_chunk_ids": [
+        "82a130d817321005b995a7b18a00aa3ba15070b11c42e557956c639dc3721396",
+        "8049ec8da81fbf8f8b7d71334588f7d98409de90b033ea022e560099a462fecb",
+        "ac4eea3e4a7f74e6a880329befcd38b2fe187d6145a0adc75f68864f7ccd1278",
+        "febcf88953b33404a09bce4d155b158950f4c3afa9eda02551091d7a5e33135a",
+        "e68658674e1f3e9141412c6764fd7fa5de607c5deb906f2961e577baa79b86e6"
+      ],
+      "source": "bbc",
+      "query_type": "multi_chunk"
+    },
+    {
+      "id": "rag_090",
+      "query": "What articles discuss both China's geopolitical competition and technology rivalry with US?",
+      "relevant_chunk_ids": [
+        "56c2ef1a03951cb0358924ad1cfdf012ca56160bef648d8bced2c26526eb6a7c",
+        "33beddd0c40e4d441b25fd5cb7e00c6994a621cc58950bc684ea3ca08780b8fc",
+        "82a130d817321005b995a7b18a00aa3ba15070b11c42e557956c639dc3721396",
+        "3b0828600711a6ef4daacbd900e630b7fcfff8d53a8ccc87ad170942704f0c2a",
+        "cd2a289e4fa7e8bc28efb18ea615b87993f043e617a5eb13a34081db1cfd7724",
+        "91a9bb4e6007c9967a67b6c01732958eb23ca533fe25db76342f598fa4d952e5"
+      ],
+      "source": "reuters",
+      "query_type": "multi_chunk"
+    },
+    {
+      "id": "rag_091",
+      "query": "Find articles covering both inheritance tax debates and economic inequality trends",
+      "relevant_chunk_ids": [
+        "91a9bb4e6007c9967a67b6c01732958eb23ca533fe25db76342f598fa4d952e5",
+        "5f72603d0f472f120849b7a36e8bb063de7e9d21a7d6ae6c887a585427fa1260",
+        "c3fcb60f59d6d999966dff70f5bb3c675dcbfb47768baa34be29c3f6a59f201b",
+        "8ac47c48b2ec7f8a7ba5274558d097817380e552bcfdc22c97ad2f2bb22bbd89",
+        "33beddd0c40e4d441b25fd5cb7e00c6994a621cc58950bc684ea3ca08780b8fc"
+      ],
+      "source": "bbc",
+      "query_type": "multi_chunk"
+    },
+    {
+      "id": "rag_092",
+      "query": "What news coverage discusses both Trump's tariff policies and global trade disruption?",
+      "relevant_chunk_ids": [
+        "33beddd0c40e4d441b25fd5cb7e00c6994a621cc58950bc684ea3ca08780b8fc",
+        "91a9bb4e6007c9967a67b6c01732958eb23ca533fe25db76342f598fa4d952e5",
+        "82a130d817321005b995a7b18a00aa3ba15070b11c42e557956c639dc3721396",
+        "e68658674e1f3e9141412c6764fd7fa5de607c5deb906f2961e577baa79b86e6"
+      ],
+      "source": "reuters, nyt",
+      "query_type": "multi_chunk"
+    },
+    {
+      "id": "rag_093",
+      "query": "Find articles about both autonomous vehicles safety concerns and regulatory frameworks",
+      "relevant_chunk_ids": [
+        "8b567f2dcda751f30a821e80b5b0ac89b740d2c2db8e9c32e9ad720050af17fb",
+        "1ae5982114ce7c62a6fdce8d09219395fd43347a8caf5a663833fd92fabf3f88",
+        "56c2ef1a03951cb0358924ad1cfdf012ca56160bef648d8bced2c26526eb6a7c",
+        "a4ba61f1b80b9dfb8cb167631ca591dd40d9bd9ac7bf6bb64bd68708c399b60b",
+        "e61139231875f0949167b6e03d5e1c5698a93f4bf05f35305ab85a0a3acda135"
+      ],
+      "source": "reuters",
+      "query_type": "multi_chunk"
+    },
+    {
+      "id": "rag_094",
+      "query": "What news articles discuss both Russia-Ukraine conflict and global food security?",
+      "relevant_chunk_ids": [
+        "dd8a7f1c2cf0599050ca7eb0aa94f22782ac88427809cd0c308c796a5f9c04ed",
+        "5c3f16bbf0c25cf4dae0d4be377e1dd4b584db91aee9a6dde9979fde31e3f17c",
+        "b256517efb618c29541b7b30bb2f73035f773763c9f4633a097e80296edab6ba",
+        "91a9bb4e6007c9967a67b6c01732958eb23ca533fe25db76342f598fa4d952e5",
+        "2a5edf805816fe46f52bb4cab5f9c639ae3538fef4d5165d10cfd5f6f29244df"
+      ],
+      "source": "bbc, reuters",
+      "query_type": "multi_chunk"
+    },
+    {
+      "id": "rag_095",
+      "query": "Find articles covering both Israel-Iran tensions and Middle East oil supply risks",
+      "relevant_chunk_ids": [
+        "de05a34e9743a9910aa24a51575f12446d683be45148c3479f1a542f2f843ae7",
+        "56dc738040302cc43f5d033df1813cffd73d63f46a7e6f3cd9f3cf6356dfb456",
+        "b256517efb618c29541b7b30bb2f73035f773763c9f4633a097e80296edab6ba",
+        "33beddd0c40e4d441b25fd5cb7e00c6994a621cc58950bc684ea3ca08780b8fc",
+        "30dbd4a810a641e5b2b230c6b05c4838a0f6eb69998340eb46e25177ff1f9420",
+        "82a130d817321005b995a7b18a00aa3ba15070b11c42e557956c639dc3721396"
+      ],
+      "source": "bbc, reuters",
+      "query_type": "multi_chunk"
+    },
+    {
+      "id": "rag_096",
+      "query": "What articles discuss both Modi's domestic politics and India's foreign policy realignment?",
+      "relevant_chunk_ids": [
+        "96b01472030e155e034d05a5749488500d8522e95379d4ad1413a3bc14edd32d",
+        "1fb4b1a570b4d5a50a0907317b39b3517287f9f1e5863b9b2af6bdb1e26db646",
+        "3a12273ee266aa01fdba5706ed2e50643d9445177c703395d6fa8fd109f716dd",
+        "14c1608a00b273d95516adc1a7d142e15d23caa96d191fee6642738ed1696be1",
+        "c468b436eac1ca4cc3bd1e6578a8a8a07b7d85bab46dd26902065c55811c8c3f"
+      ],
+      "source": "bbc, ap",
+      "query_type": "multi_chunk"
+    },
+    {
+      "id": "rag_097",
+      "query": "What news articles cover both UK healthcare decline and European welfare state concerns?",
+      "relevant_chunk_ids": [
+        "c3fcb60f59d6d999966dff70f5bb3c675dcbfb47768baa34be29c3f6a59f201b",
+        "4f4496f24bbd1e96bd157ec80a0adec996b61235c4b21cf3343e20ea37f7ac7d",
+        "91a9bb4e6007c9967a67b6c01732958eb23ca533fe25db76342f598fa4d952e5",
+        "1a6ac4be273911af2d6ffd4c973e793765e10c3668b607ea7810efe4d023d8c9",
+        "1beb4f3fb7559610b050197ee574e359d2f651df0556c49ae7e52da1ccb3546b"
+      ],
+      "source": "bbc",
+      "query_type": "multi_chunk"
+    },
+    {
+      "id": "rag_098",
+      "query": "Find articles covering both Kenya protests and broader African governance issues",
+      "relevant_chunk_ids": [
+        "c468b436eac1ca4cc3bd1e6578a8a8a07b7d85bab46dd26902065c55811c8c3f",
+        "42d269e95d4c1e1ffe6f96057392457e3139785127cf3f85331abda53bbba624",
+        "3a12273ee266aa01fdba5706ed2e50643d9445177c703395d6fa8fd109f716dd"
+      ],
+      "source": "bbc",
+      "query_type": "multi_chunk"
+    },
+    {
+      "id": "rag_099",
+      "query": "What articles discuss both ceasefire violations and ongoing Ukraine war crimes?",
+      "relevant_chunk_ids": [
+        "5c3f16bbf0c25cf4dae0d4be377e1dd4b584db91aee9a6dde9979fde31e3f17c",
+        "dd8a7f1c2cf0599050ca7eb0aa94f22782ac88427809cd0c308c796a5f9c04ed",
+        "82a130d817321005b995a7b18a00aa3ba15070b11c42e557956c639dc3721396",
+        "d4cbf7590bcad0cad2756dbdfac76c6f2483f4d0d9e55f32b69bbc22086d2b3a"
+      ],
+      "source": "bbc, ap",
+      "query_type": "multi_chunk"
+    },
+    {
+      "id": "rag_100",
+      "query": "Find articles covering both corporate manipulation in politics and media bias concerns",
+      "relevant_chunk_ids": [
+        "82a130d817321005b995a7b18a00aa3ba15070b11c42e557956c639dc3721396",
+        "8049ec8da81fbf8f8b7d71334588f7d98409de90b033ea022e560099a462fecb",
+        "ac4eea3e4a7f74e6a880329befcd38b2fe187d6145a0adc75f68864f7ccd1278",
+        "d229bf8dece2caab54ec76e1634852d52cd225a289aa0a329e28c7ae1fe619e8",
+        "42d269e95d4c1e1ffe6f96057392457e3139785127cf3f85331abda53bbba624"
+      ],
+      "source": "bbc",
+      "query_type": "multi_chunk"
+    }
+  ]
+}

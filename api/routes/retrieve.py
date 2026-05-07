@@ -64,12 +64,39 @@ def retrieve_nl2sql(req: NL2SQLRequest) -> dict[str, Any]:
 # ── C. KG Query ──────────────────────────────────────────────────────────────
 
 class KGRequest(BaseModel):
-    query_kind: str  # propagation_path | key_nodes | community_relations | topic_correlation
+    query_kind: str  # propagation_path | key_nodes | topic_correlation | cascade_tree |
+                     # viral_cascade | echo_chamber | influencer_rank | coordinated_groups
     target: dict[str, Any] = Field(default_factory=dict)
 
 
 @router.post("/kg")
 def retrieve_kg(req: KGRequest) -> dict[str, Any]:
+    # Analytics query kinds use KGAnalytics (NetworkX-backed algorithms)
+    if req.query_kind in ("echo_chamber", "influencer_rank", "coordinated_groups"):
+        try:
+            from agents.kg_analytics import KGAnalytics
+        except Exception as exc:
+            raise HTTPException(status_code=503, detail=f"analytics unavailable: {exc}")
+        analytics = KGAnalytics()
+        if req.query_kind == "echo_chamber":
+            out = analytics.echo_chamber(
+                topic_id=req.target.get("topic_id", ""),
+                modularity_threshold=float(req.target.get("modularity_threshold", 0.3)),
+            )
+        elif req.query_kind == "influencer_rank":
+            out = analytics.influencer_rank(
+                topic_id=req.target.get("topic_id"),
+                top_k=int(req.target.get("top_k", 10)),
+                since_days=req.target.get("since_days", 30),
+            )
+        else:  # coordinated_groups
+            out = analytics.coordinated_groups(
+                topic_id=req.target.get("topic_id"),
+                min_size=int(req.target.get("min_size", 3)),
+                since_days=req.target.get("since_days", 30),
+            )
+        return {"branch": "kg", "kg_output": out.model_dump()}
+
     try:
         from tools.kg_query_tools import KGQueryTool
     except Exception as exc:

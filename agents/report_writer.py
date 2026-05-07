@@ -27,7 +27,7 @@ from typing import Any, Optional
 import openai
 import structlog
 
-from config import OPENAI_API_KEY, OPENAI_MODEL
+from config import LLM_REQUEST_TIMEOUT, OPENAI_API_KEY, OPENAI_MODEL
 from models.branch_output import EvidenceOutput, KGOutput, SQLOutput
 from models.evidence import Citation
 from models.query import RewrittenQuery
@@ -115,6 +115,12 @@ Graph (KG) presentation rules:
   scores in plain language ("most influential", "central bridge",
   "tight cluster of N accounts"), and quote one or two characteristic
   posts when post-level data is in the bundle.
+- For Entity nodes (label="Entity"): when the payload lists
+  `key_entities_in_graph`, explicitly name those entities in the answer as
+  the relevant entities identified in the knowledge graph for this topic.
+  For example: "The knowledge graph identifies the following entities as
+  relevant to this topic: Iran, IRGC, Strait of Hormuz." Always include
+  this sentence when key_entities_in_graph is present in the payload.
 - If a KG output has no nodes, no edges, and no positive graph metrics, say
   the graph data is insufficient for that KG analysis. Never turn missing
   graph data into a negative conclusion. In particular, do not say a topic
@@ -185,7 +191,7 @@ class ReportWriter:
         client: Optional[openai.OpenAI] = None,
         model: str = OPENAI_MODEL,
     ) -> None:
-        self._client = client or openai.OpenAI(api_key=OPENAI_API_KEY)
+        self._client = client or openai.OpenAI(api_key=OPENAI_API_KEY, timeout=LLM_REQUEST_TIMEOUT)
         self._model = model
 
     # ── Public ─────────────────────────────────────────────────────────────────
@@ -212,9 +218,19 @@ class ReportWriter:
                 report.citations.append(chunk.citation)
         report.citations = _dedupe_citations(report.citations)
 
+        # For fact-check and claim-audit questions, the evidence branch is
+        # the primary source; NL2SQL provides only supplementary Reddit
+        # corroboration.  Do not bail out on SQL failure when evidence
+        # chunks were successfully retrieved — the LLM can still compose
+        # a meaningful answer from the official-source evidence alone.
+        _fact_check_with_evidence = (
+            evidence_outs
+            and (_question_is_fact_check(rq) or _question_is_topic_claim_audit(rq))
+        )
+
         if (_planned_branch(execution, "nl2sql") and not sql_outs
                 and _question_needs_sql(rq)):
-            if not (kg_outs and _question_needs_kg(rq)):
+            if not ((kg_outs and _question_needs_kg(rq)) or _fact_check_with_evidence):
                 report.markdown_body = (
                     "I couldn't answer the requested topic/count/emotion "
                     "query because the NL2SQL branch failed before returning "
@@ -223,12 +239,15 @@ class ReportWriter:
                 report.needs_human_review = True
                 report.notes.append("nl2sql_required_but_failed")
                 return report
-            report.notes.append("nl2sql_failed_but_kg_available")
+            if _fact_check_with_evidence:
+                report.notes.append("nl2sql_failed_but_evidence_available")
+            else:
+                report.notes.append("nl2sql_failed_but_kg_available")
 
         if _question_needs_sql(rq) and sql_outs:
             successful_sql = [s for s in sql_outs if s.success]
             if not successful_sql:
-                if not (kg_outs and _question_needs_kg(rq)):
+                if not ((kg_outs and _question_needs_kg(rq)) or _fact_check_with_evidence):
                     report.markdown_body = (
                         "The NL2SQL branch failed before returning rows. I "
                         "won't invent Reddit/community facts; check the "
@@ -237,9 +256,12 @@ class ReportWriter:
                     report.needs_human_review = True
                     report.notes.append("nl2sql_failed")
                     return report
-                report.notes.append("nl2sql_failed_but_kg_available")
+                if _fact_check_with_evidence:
+                    report.notes.append("nl2sql_failed_but_evidence_available")
+                else:
+                    report.notes.append("nl2sql_failed_but_kg_available")
             elif not any(s.rows for s in successful_sql):
-                if not (kg_outs and _question_needs_kg(rq)):
+                if not ((kg_outs and _question_needs_kg(rq)) or _fact_check_with_evidence):
                     report.markdown_body = (
                         "I ran the SQL query for this request, but it "
                         "returned no matching rows. I won't invent topics or "
@@ -249,7 +271,10 @@ class ReportWriter:
                     report.needs_human_review = True
                     report.notes.append("nl2sql_empty_result")
                     return report
-                report.notes.append("nl2sql_empty_but_kg_available")
+                if _fact_check_with_evidence:
+                    report.notes.append("nl2sql_empty_but_evidence_available")
+                else:
+                    report.notes.append("nl2sql_empty_but_kg_available")
 
         if not (evidence_outs or sql_outs or kg_outs):
             report.markdown_body = (
@@ -488,6 +513,17 @@ class ReportWriter:
                     sections.append(
                         f"    nodes: {json.dumps(sample, default=str)[:600]}"
                     )
+                    # Surface Entity nodes explicitly so the writer names them
+                    entity_nodes = [n for n in k.nodes if n.label == "Entity"]
+                    if entity_nodes:
+                        entity_names = [
+                            str(n.properties.get("name") or n.id)
+                            for n in entity_nodes[:15]
+                        ]
+                        sections.append(
+                            f"    key_entities_in_graph: "
+                            f"{', '.join(entity_names)}"
+                        )
                 if k.edges:
                     if k.query_kind == "reply_chains":
                         node_lookup = {n.id: n for n in k.nodes}

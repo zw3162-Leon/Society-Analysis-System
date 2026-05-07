@@ -1,0 +1,277 @@
+{
+  "version": "1.0",
+  "description": "30 claim verification entries. Questions trigger topic_claim_audit intent (evidence + nl2sql branches). Accuracy measured by keyword recall in the answer — no external LLM judge required.",
+  "keyword_matching": "case-insensitive substring match",
+  "entries": [
+    {
+      "id": "claim_001",
+      "session_id": "s-eval-claim-001",
+      "question": "What evidence supports or contradicts the claims being made about Russia's military actions in Ukraine?",
+      "topic_label": "Russia-Ukraine Conflict",
+      "expected_keywords": ["Russia", "Ukraine", "military", "evidence"],
+      "expected_has_evidence": true,
+      "notes": "Core Russia-Ukraine claim verification"
+    },
+    {
+      "id": "claim_002",
+      "session_id": "s-eval-claim-002",
+      "question": "Are the claims about Russian drone strikes on Moscow supported by official news sources?",
+      "topic_label": "Drone Strikes Moscow",
+      "expected_keywords": ["Russia", "drone", "Moscow"],
+      "expected_has_evidence": true,
+      "notes": "Drone strike claim with evidence sourcing"
+    },
+    {
+      "id": "claim_003",
+      "session_id": "s-eval-claim-003",
+      "question": "Verify the claims circulating in social media about Iran's nuclear program and US sanctions",
+      "topic_label": "Iran-US Relations",
+      "expected_keywords": ["Iran", "US", "nuclear", "sanctions"],
+      "expected_has_evidence": true,
+      "notes": "Iran nuclear claim verification"
+    },
+    {
+      "id": "claim_004",
+      "session_id": "s-eval-claim-004",
+      "question": "Are the claims about Trump ending renewable energy support backed by evidence?",
+      "topic_label": "Trump Renewable Energy",
+      "expected_keywords": ["Trump", "renewable", "energy"],
+      "expected_has_evidence": true,
+      "notes": "Policy claim verification"
+    },
+    {
+      "id": "claim_005",
+      "session_id": "s-eval-claim-005",
+      "question": "What evidence is available to verify claims about the Iran-UAE oil dispute?",
+      "topic_label": "Iran-UAE Tensions",
+      "expected_keywords": ["Iran", "UAE", "oil"],
+      "expected_has_evidence": true,
+      "notes": "Energy claim with sourcing"
+    },
+    {
+      "id": "claim_006",
+      "session_id": "s-eval-claim-006",
+      "question": "Fact-check the statements being made about ceasefire violations in conflict zones",
+      "topic_label": "Ceasefire Violations",
+      "expected_keywords": ["ceasefire", "conflict", "violation"],
+      "expected_has_evidence": true,
+      "notes": "Ceasefire claim fact-check"
+    },
+    {
+      "id": "claim_007",
+      "session_id": "s-eval-claim-007",
+      "question": "Are the claims about global energy independence being affected by geopolitical tensions accurate?",
+      "topic_label": "Global Tensions Energy",
+      "expected_keywords": ["energy", "geopolitical", "tensions"],
+      "expected_has_evidence": true,
+      "notes": "Geopolitical energy claim"
+    },
+    {
+      "id": "claim_008",
+      "session_id": "s-eval-claim-008",
+      "question": "What official sources confirm or deny the claims about military buildup in the Strait of Hormuz?",
+      "topic_label": "Strait of Hormuz",
+      "expected_keywords": ["Strait", "military", "Hormuz"],
+      "expected_has_evidence": true,
+      "notes": "Military claim with official source check"
+    },
+    {
+      "id": "claim_009",
+      "session_id": "s-eval-claim-009",
+      "question": "Verify the claims that Ukraine has received military aid from Western countries",
+      "topic_label": "Russia-Ukraine Conflict",
+      "expected_keywords": ["Ukraine", "military", "aid", "Western"],
+      "expected_has_evidence": true,
+      "notes": "Military aid claim"
+    },
+    {
+      "id": "claim_010",
+      "session_id": "s-eval-claim-010",
+      "question": "Are there credible sources supporting the claims about Iran threatening to close the Strait of Hormuz?",
+      "topic_label": "Iran-US Relations",
+      "expected_keywords": ["Iran", "Strait", "Hormuz"],
+      "expected_has_evidence": true,
+      "notes": "Strait closure threat claim"
+    },
+    {
+      "id": "claim_011",
+      "session_id": "s-eval-claim-011",
+      "question": "What evidence exists for claims about Russia's energy leverage over European countries?",
+      "topic_label": "Global Tensions Energy",
+      "expected_keywords": ["Russia", "energy", "Europe"],
+      "expected_has_evidence": true,
+      "notes": "Energy leverage claim"
+    },
+    {
+      "id": "claim_012",
+      "session_id": "s-eval-claim-012",
+      "question": "Are the claims about Trump reversing Biden's clean energy executive orders supported by official reports?",
+      "topic_label": "Trump Renewable Energy",
+      "expected_keywords": ["Trump", "energy", "executive"],
+      "expected_has_evidence": true,
+      "notes": "Executive order claim"
+    },
+    {
+      "id": "claim_013",
+      "session_id": "s-eval-claim-013",
+      "question": "Fact-check claims that electric vehicle adoption is accelerating due to government policies",
+      "topic_label": "Electric Vehicles",
+      "expected_keywords": ["electric", "vehicle", "government", "policy"],
+      "expected_has_evidence": true,
+      "notes": "EV policy claim"
+    },
+    {
+      "id": "claim_014",
+      "session_id": "s-eval-claim-014",
+      "question": "Verify claims that Russia is targeting civilian infrastructure in Ukraine",
+      "topic_label": "Russia-Ukraine Conflict",
+      "expected_keywords": ["Russia", "Ukraine", "civilian", "infrastructure"],
+      "expected_has_evidence": true,
+      "notes": "Civilian targeting claim"
+    },
+    {
+      "id": "claim_015",
+      "session_id": "s-eval-claim-015",
+      "question": "What official evidence supports or refutes claims about Iran developing nuclear weapons?",
+      "topic_label": "Iran-US Relations",
+      "expected_keywords": ["Iran", "nuclear", "weapons"],
+      "expected_has_evidence": true,
+      "notes": "Nuclear weapons claim"
+    },
+    {
+      "id": "claim_016",
+      "session_id": "s-eval-claim-016",
+      "question": "Are the claims about coordinated misinformation campaigns on social media about Russia-Ukraine backed by data?",
+      "topic_label": "Russia-Ukraine Conflict",
+      "expected_keywords": ["Russia", "Ukraine", "misinformation"],
+      "expected_has_evidence": true,
+      "notes": "Misinformation claim with data check"
+    },
+    {
+      "id": "claim_017",
+      "session_id": "s-eval-claim-017",
+      "question": "Find evidence to verify or refute claims that OPEC is manipulating oil prices amid Middle East tensions",
+      "topic_label": "Iran-UAE Tensions",
+      "expected_keywords": ["OPEC", "oil", "prices"],
+      "expected_has_evidence": true,
+      "notes": "Oil price manipulation claim"
+    },
+    {
+      "id": "claim_018",
+      "session_id": "s-eval-claim-018",
+      "question": "What sources support claims that NATO is directly involved in the Russia-Ukraine conflict?",
+      "topic_label": "Russia-Ukraine Conflict",
+      "expected_keywords": ["NATO", "Russia", "Ukraine"],
+      "expected_has_evidence": true,
+      "notes": "NATO involvement claim"
+    },
+    {
+      "id": "claim_019",
+      "session_id": "s-eval-claim-019",
+      "question": "Verify the claims that China is secretly supporting Russia in the Ukraine war",
+      "topic_label": "Russia-Ukraine Conflict",
+      "expected_keywords": ["China", "Russia", "Ukraine"],
+      "expected_has_evidence": true,
+      "notes": "China support claim"
+    },
+    {
+      "id": "claim_020",
+      "session_id": "s-eval-claim-020",
+      "question": "Are the claims about Trump ending federal subsidies for solar energy supported by official policy documents?",
+      "topic_label": "Trump Renewable Energy",
+      "expected_keywords": ["Trump", "solar", "energy", "subsid"],
+      "expected_has_evidence": true,
+      "notes": "Solar subsidy claim"
+    },
+    {
+      "id": "claim_021",
+      "session_id": "s-eval-claim-021",
+      "question": "What evidence exists for claims that Ukraine is retaking territory from Russia?",
+      "topic_label": "Russia-Ukraine Conflict",
+      "expected_keywords": ["Ukraine", "Russia", "territory"],
+      "expected_has_evidence": true,
+      "notes": "Territorial claim"
+    },
+    {
+      "id": "claim_022",
+      "session_id": "s-eval-claim-022",
+      "question": "Are the social media claims about Iran attacking UAE oil facilities supported by news reports?",
+      "topic_label": "Iran-UAE Tensions",
+      "expected_keywords": ["Iran", "UAE", "oil", "attack"],
+      "expected_has_evidence": true,
+      "notes": "Oil facility attack claim"
+    },
+    {
+      "id": "claim_023",
+      "session_id": "s-eval-claim-023",
+      "question": "Fact-check the claims that drone technology is changing the nature of modern warfare in Ukraine",
+      "topic_label": "Drone Strikes Moscow",
+      "expected_keywords": ["drone", "Ukraine", "warfare"],
+      "expected_has_evidence": true,
+      "notes": "Drone warfare claim"
+    },
+    {
+      "id": "claim_024",
+      "session_id": "s-eval-claim-024",
+      "question": "Verify whether the claims about Zelensky's leadership during the war are backed by international reports",
+      "topic_label": "Russia-Ukraine Conflict",
+      "expected_keywords": ["Zelensky", "Ukraine", "war"],
+      "expected_has_evidence": true,
+      "notes": "Leadership claim"
+    },
+    {
+      "id": "claim_025",
+      "session_id": "s-eval-claim-025",
+      "question": "What official sources confirm claims that Putin violated the Geneva Convention in Ukraine?",
+      "topic_label": "Russia-Ukraine Conflict",
+      "expected_keywords": ["Putin", "Ukraine", "Russia"],
+      "expected_has_evidence": true,
+      "notes": "War crimes claim"
+    },
+    {
+      "id": "claim_026",
+      "session_id": "s-eval-claim-026",
+      "question": "Are the claims about Iran enriching uranium beyond civilian levels supported by IAEA reports?",
+      "topic_label": "Iran-US Relations",
+      "expected_keywords": ["Iran", "uranium", "nuclear"],
+      "expected_has_evidence": true,
+      "notes": "Uranium enrichment claim"
+    },
+    {
+      "id": "claim_027",
+      "session_id": "s-eval-claim-027",
+      "question": "Find evidence supporting or contradicting claims that Russia is using energy as a geopolitical weapon",
+      "topic_label": "Global Tensions Energy",
+      "expected_keywords": ["Russia", "energy", "geopolitical"],
+      "expected_has_evidence": true,
+      "notes": "Energy weapon claim"
+    },
+    {
+      "id": "claim_028",
+      "session_id": "s-eval-claim-028",
+      "question": "What evidence supports claims that the Israel-Iran conflict is escalating in 2024?",
+      "topic_label": "Iran-US Relations",
+      "expected_keywords": ["Israel", "Iran", "conflict"],
+      "expected_has_evidence": true,
+      "notes": "Israel-Iran escalation claim"
+    },
+    {
+      "id": "claim_029",
+      "session_id": "s-eval-claim-029",
+      "question": "Verify the claims that Western sanctions on Russia are damaging the Russian economy",
+      "topic_label": "Russia-Ukraine Conflict",
+      "expected_keywords": ["Russia", "sanctions", "economy"],
+      "expected_has_evidence": true,
+      "notes": "Sanctions effectiveness claim"
+    },
+    {
+      "id": "claim_030",
+      "session_id": "s-eval-claim-030",
+      "question": "Are the claims that Trump's energy policies are increasing US carbon emissions backed by official data?",
+      "topic_label": "Trump Renewable Energy",
+      "expected_keywords": ["Trump", "energy", "carbon", "emissions"],
+      "expected_has_evidence": true,
+      "notes": "Carbon emissions claim"
+    }
+  ]
+}

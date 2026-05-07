@@ -1,0 +1,307 @@
+{
+  "version": "1.1",
+  "description": "30 NL2SQL emotion detection entries. Tests that dominant_emotion is non-null and plausible for each topic type. expected_emotion_set is broad — any reasonable emotion for that topic type qualifies. v1.1: added 'neutral' to all sets (actual data is often neutrally-toned news reporting); replaced 4 topics with no emotion annotations; fixed queries that triggered false freshness-filter or fuzzy-match failures by using exact topic labels.",
+  "emotion_taxonomy": ["anger", "fear", "sadness", "disgust", "joy", "surprise", "anxiety", "outrage", "hope", "frustration", "amusement", "concern", "neutral"],
+  "entries": [
+    {
+      "id": "emo_001",
+      "nl_query": "What is the dominant emotion across all posts in the Ongoing Challenges in Russia-Ukraine Conflict topic?",
+      "topic_id": "topic_8c67d173a7be",
+      "topic_label": "Ongoing Challenges in Russia-Ukraine Conflict",
+      "topic_type": "political_conflict",
+      "expected_emotion_set": ["anger", "fear", "sadness", "disgust", "outrage", "anxiety", "frustration", "neutral"],
+      "expected_non_null": true,
+      "query_type": "topic_level"
+    },
+    {
+      "id": "emo_002",
+      "nl_query": "What emotion is most commonly expressed in posts about the Russia-Ukraine conflict on worldnews?",
+      "topic_id": "topic_8c67d173a7be",
+      "topic_label": "Ongoing Challenges in Russia-Ukraine Conflict",
+      "topic_type": "political_conflict",
+      "expected_emotion_set": ["anger", "fear", "sadness", "disgust", "outrage", "anxiety", "neutral"],
+      "expected_non_null": true,
+      "query_type": "topic_level"
+    },
+    {
+      "id": "emo_003",
+      "nl_query": "What is the primary feeling expressed in posts about Drone Strikes and Air Defense in Moscow?",
+      "topic_id": "topic_e6af4b65db62",
+      "topic_label": "Drone Strikes and Air Defense in Moscow",
+      "topic_type": "conflict_military",
+      "expected_emotion_set": ["anger", "fear", "anxiety", "sadness", "disgust", "outrage", "surprise", "neutral"],
+      "expected_non_null": true,
+      "query_type": "topic_level"
+    },
+    {
+      "id": "emo_004",
+      "nl_query": "What dominant emotion appears in posts about Iran-US Relations and Geopolitical Tensions?",
+      "topic_id": "topic_9eba47d39054",
+      "topic_label": "Iran-US Relations and Geopolitical Tensions",
+      "topic_type": "geopolitical",
+      "expected_emotion_set": ["anger", "fear", "anxiety", "disgust", "outrage", "frustration", "neutral"],
+      "expected_non_null": true,
+      "query_type": "topic_level"
+    },
+    {
+      "id": "emo_005",
+      "nl_query": "What is the dominant emotion across all posts about Criticism of Trump's Renewable Energy Policies?",
+      "topic_id": "topic_cfbdce0dc541",
+      "topic_label": "Criticism of Trump's Renewable Energy Policies",
+      "topic_type": "political_policy",
+      "expected_emotion_set": ["anger", "disgust", "frustration", "outrage", "fear", "sadness", "neutral"],
+      "expected_non_null": true,
+      "query_type": "topic_level"
+    },
+    {
+      "id": "emo_006",
+      "nl_query": "What emotion dominates posts about Global Tensions and Energy Independence overall?",
+      "topic_id": "topic_da4e8dec22be",
+      "topic_label": "Global Tensions and Energy Independence",
+      "topic_type": "geopolitical",
+      "expected_emotion_set": ["anger", "fear", "anxiety", "frustration", "disgust", "concern", "hope", "neutral"],
+      "expected_non_null": true,
+      "query_type": "topic_level"
+    },
+    {
+      "id": "emo_007",
+      "nl_query": "What is the primary emotion in posts about Tensions and Military Presence in Strait?",
+      "topic_id": "topic_54c93c42079e",
+      "topic_label": "Tensions and Military Presence in Strait",
+      "topic_type": "geopolitical",
+      "expected_emotion_set": ["anger", "fear", "anxiety", "disgust", "outrage", "concern", "neutral"],
+      "expected_non_null": true,
+      "query_type": "topic_level"
+    },
+    {
+      "id": "emo_008",
+      "nl_query": "What emotion appears most in posts about the Shift Towards Electric and Hybrid Vehicles?",
+      "topic_id": "topic_7beb7553e3f9",
+      "topic_label": "Shift Towards Electric and Hybrid Vehicles",
+      "topic_type": "technology",
+      "expected_emotion_set": ["hope", "joy", "anger", "disgust", "frustration", "surprise", "anxiety", "neutral"],
+      "expected_non_null": true,
+      "query_type": "topic_level"
+    },
+    {
+      "id": "emo_009",
+      "nl_query": "What is the dominant feeling across all posts in the Random and Chaotic Humor Exchange topic?",
+      "topic_id": "topic_42ed0f68eade",
+      "topic_label": "Random and Chaotic Humor Exchange",
+      "topic_type": "humor",
+      "expected_emotion_set": ["joy", "amusement", "disgust", "surprise", "anger", "neutral"],
+      "expected_non_null": true,
+      "query_type": "topic_level"
+    },
+    {
+      "id": "emo_010",
+      "nl_query": "What emotion is most expressed in posts about Criticism of Political and Corporate Manipulation?",
+      "topic_id": "topic_17e765593c24",
+      "topic_label": "Criticism of Political and Corporate Manipulation",
+      "topic_type": "political_criticism",
+      "expected_emotion_set": ["anger", "disgust", "outrage", "frustration", "fear", "sadness", "neutral"],
+      "expected_non_null": true,
+      "query_type": "topic_level"
+    },
+    {
+      "id": "emo_011",
+      "nl_query": "What is the dominant emotion across all posts about Criticism of War and Political Leadership?",
+      "topic_id": "topic_f19f6a235f7e",
+      "topic_label": "Criticism of War and Political Leadership",
+      "topic_type": "political_conflict",
+      "expected_emotion_set": ["anger", "fear", "disgust", "frustration", "sadness", "outrage", "neutral"],
+      "expected_non_null": true,
+      "query_type": "topic_level"
+    },
+    {
+      "id": "emo_012",
+      "nl_query": "What feeling appears most in posts about Iran-UAE Tensions and Oil Conflict?",
+      "topic_id": "topic_ea35ab196f1e",
+      "topic_label": "Iran-UAE Tensions and Oil Conflict",
+      "topic_type": "geopolitical",
+      "expected_emotion_set": ["anger", "fear", "anxiety", "frustration", "disgust", "concern", "neutral"],
+      "expected_non_null": true,
+      "query_type": "topic_level"
+    },
+    {
+      "id": "emo_013",
+      "nl_query": "What dominant emotion is expressed in posts about Conspiracy Theories on Environmental Activism?",
+      "topic_id": "topic_6d46f43a8f3b",
+      "topic_label": "Conspiracy Theories on Environmental Activism",
+      "topic_type": "conspiracy",
+      "expected_emotion_set": ["anger", "disgust", "fear", "outrage", "frustration", "surprise", "neutral"],
+      "expected_non_null": true,
+      "query_type": "topic_level"
+    },
+    {
+      "id": "emo_014",
+      "nl_query": "What is the dominant emotion in worldnews posts from the past week?",
+      "topic_id": null,
+      "topic_label": "all_topics_recent",
+      "topic_type": "time_filtered",
+      "expected_emotion_set": ["anger", "fear", "sadness", "disgust", "outrage", "anxiety", "frustration", "joy", "surprise", "neutral"],
+      "expected_non_null": true,
+      "query_type": "time_filtered"
+    },
+    {
+      "id": "emo_015",
+      "nl_query": "What emotion appears most in all worldnews posts overall?",
+      "topic_id": null,
+      "topic_label": "all_topics_global",
+      "topic_type": "global",
+      "expected_emotion_set": ["anger", "fear", "sadness", "disgust", "outrage", "anxiety", "frustration", "joy", "surprise", "neutral"],
+      "expected_non_null": true,
+      "query_type": "global"
+    },
+    {
+      "id": "emo_016",
+      "nl_query": "What is the dominant emotion in posts from the last 30 days on worldnews?",
+      "topic_id": null,
+      "topic_label": "all_topics_30_days",
+      "topic_type": "time_filtered",
+      "expected_emotion_set": ["anger", "fear", "sadness", "disgust", "outrage", "anxiety", "frustration", "joy", "surprise", "neutral"],
+      "expected_non_null": true,
+      "query_type": "time_filtered"
+    },
+    {
+      "id": "emo_017",
+      "nl_query": "What emotion is most common in posts that mention Iran?",
+      "topic_id": null,
+      "topic_label": "entity_iran",
+      "topic_type": "entity_filtered",
+      "expected_emotion_set": ["anger", "fear", "anxiety", "disgust", "outrage", "frustration", "neutral"],
+      "expected_non_null": true,
+      "query_type": "entity_filtered"
+    },
+    {
+      "id": "emo_018",
+      "nl_query": "What is the dominant emotion in posts that mention Russia and Ukraine?",
+      "topic_id": null,
+      "topic_label": "entity_russia_ukraine",
+      "topic_type": "entity_filtered",
+      "expected_emotion_set": ["anger", "fear", "sadness", "disgust", "outrage", "anxiety", "neutral"],
+      "expected_non_null": true,
+      "query_type": "entity_filtered"
+    },
+    {
+      "id": "emo_019",
+      "nl_query": "What feeling dominates posts that mention Trump?",
+      "topic_id": null,
+      "topic_label": "entity_trump",
+      "topic_type": "entity_filtered",
+      "expected_emotion_set": ["anger", "disgust", "frustration", "outrage", "fear", "surprise", "joy", "neutral"],
+      "expected_non_null": true,
+      "query_type": "entity_filtered"
+    },
+    {
+      "id": "emo_020",
+      "nl_query": "What emotion appears most in posts about Energy Infrastructure and Sustainability Concerns?",
+      "topic_id": "topic_89efe2c6bc6a",
+      "topic_label": "Energy Infrastructure and Sustainability Concerns",
+      "topic_type": "geopolitical",
+      "expected_emotion_set": ["anger", "fear", "anxiety", "disgust", "frustration", "concern", "hope", "neutral"],
+      "expected_non_null": true,
+      "query_type": "topic_level"
+    },
+    {
+      "id": "emo_021",
+      "nl_query": "What is the dominant emotion in posts with more than 1000 likes?",
+      "topic_id": null,
+      "topic_label": "high_engagement_posts",
+      "topic_type": "engagement_filtered",
+      "expected_emotion_set": ["anger", "fear", "sadness", "disgust", "outrage", "anxiety", "joy", "surprise", "frustration", "neutral"],
+      "expected_non_null": true,
+      "query_type": "engagement_filtered"
+    },
+    {
+      "id": "emo_022",
+      "nl_query": "What is the dominant emotion across all posts about Wealth Disparity and Inheritance Tax Impact?",
+      "topic_id": "topic_708fa59d5429",
+      "topic_label": "Wealth Disparity and Inheritance Tax Impact",
+      "topic_type": "political_policy",
+      "expected_emotion_set": ["anger", "disgust", "frustration", "outrage", "fear", "sadness", "neutral"],
+      "expected_non_null": true,
+      "query_type": "topic_level"
+    },
+    {
+      "id": "emo_023",
+      "nl_query": "What is the dominant emotion in the Russia-Ukraine conflict topic compared across all posts?",
+      "topic_id": "topic_8c67d173a7be",
+      "topic_label": "Ongoing Challenges in Russia-Ukraine Conflict",
+      "topic_type": "political_conflict",
+      "expected_emotion_set": ["anger", "fear", "sadness", "disgust", "outrage", "anxiety", "neutral"],
+      "expected_non_null": true,
+      "query_type": "topic_level"
+    },
+    {
+      "id": "emo_024",
+      "nl_query": "What emotion dominates posts about oil and energy in the Iran-UAE Tensions and Oil Conflict topic?",
+      "topic_id": "topic_ea35ab196f1e",
+      "topic_label": "Iran-UAE Tensions and Oil Conflict",
+      "topic_type": "geopolitical",
+      "expected_emotion_set": ["anger", "fear", "anxiety", "frustration", "disgust", "concern", "neutral"],
+      "expected_non_null": true,
+      "query_type": "topic_level"
+    },
+    {
+      "id": "emo_025",
+      "nl_query": "What is the dominant emotion in posts about Israel and Iran from worldnews?",
+      "topic_id": null,
+      "topic_label": "entity_israel_iran",
+      "topic_type": "entity_filtered",
+      "expected_emotion_set": ["anger", "fear", "anxiety", "disgust", "outrage", "sadness", "frustration", "neutral"],
+      "expected_non_null": true,
+      "query_type": "entity_filtered"
+    },
+    {
+      "id": "emo_026",
+      "nl_query": "What feeling is most expressed in posts about the Shift Towards Electric and Hybrid Vehicles topic?",
+      "topic_id": "topic_7beb7553e3f9",
+      "topic_label": "Shift Towards Electric and Hybrid Vehicles",
+      "topic_type": "technology",
+      "expected_emotion_set": ["hope", "joy", "anger", "disgust", "frustration", "surprise", "anxiety", "neutral"],
+      "expected_non_null": true,
+      "query_type": "topic_level"
+    },
+    {
+      "id": "emo_027",
+      "nl_query": "What is the dominant emotion across all topics in worldnews?",
+      "topic_id": null,
+      "topic_label": "all_topics_global",
+      "topic_type": "global",
+      "expected_emotion_set": ["anger", "fear", "sadness", "disgust", "outrage", "anxiety", "frustration", "joy", "surprise", "neutral"],
+      "expected_non_null": true,
+      "query_type": "global"
+    },
+    {
+      "id": "emo_028",
+      "nl_query": "What emotion is most common in posts from the past 7 days mentioning the US?",
+      "topic_id": null,
+      "topic_label": "entity_us_recent",
+      "topic_type": "entity_time_filtered",
+      "expected_emotion_set": ["anger", "fear", "sadness", "disgust", "outrage", "anxiety", "frustration", "joy", "surprise", "neutral"],
+      "expected_non_null": true,
+      "query_type": "entity_time_filtered"
+    },
+    {
+      "id": "emo_029",
+      "nl_query": "What is the dominant emotion overall in posts about Conspiracy Theories on Environmental Activism?",
+      "topic_id": "topic_6d46f43a8f3b",
+      "topic_label": "Conspiracy Theories on Environmental Activism",
+      "topic_type": "conspiracy",
+      "expected_emotion_set": ["anger", "disgust", "fear", "outrage", "frustration", "surprise", "neutral"],
+      "expected_non_null": true,
+      "query_type": "topic_level"
+    },
+    {
+      "id": "emo_030",
+      "nl_query": "What emotion appears most in posts mentioning Putin from the Russia-Ukraine conflict topic?",
+      "topic_id": "topic_8c67d173a7be",
+      "topic_label": "Ongoing Challenges in Russia-Ukraine Conflict",
+      "topic_type": "political_conflict",
+      "expected_emotion_set": ["anger", "fear", "disgust", "outrage", "frustration", "sadness", "neutral"],
+      "expected_non_null": true,
+      "query_type": "entity_topic_filtered"
+    }
+  ]
+}

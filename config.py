@@ -82,6 +82,10 @@ REDDIT_DEFAULT_SUBREDDITS: list[str] = [
 
 LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
 
+# Maximum seconds to wait for a single OpenAI API call.  Must be well under
+# RESEARCH_API_LONG_TIMEOUT (240 s) so the UI never sees a read-timeout.
+LLM_REQUEST_TIMEOUT: float = float(os.getenv("LLM_REQUEST_TIMEOUT", "180"))
+
 MULTIMODAL_DAILY_BUDGET_USD: float = float(
     os.getenv("MULTIMODAL_DAILY_BUDGET_USD", "5.0")
 )

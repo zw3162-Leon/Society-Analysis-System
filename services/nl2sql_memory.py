@@ -232,6 +232,28 @@ class NL2SQLMemory:
             self._cols.nl2sql.delete(ids=record_ids)
             log.info("nl2sql_memory.deleted", count=len(record_ids))
 
+    def clear_all_errors(self) -> int:
+        """Delete every error-kind record.
+
+        Use this to reset accumulated bad lessons that are blocking valid
+        SQL generation (e.g. empty-SQL lessons that discourage the LLM from
+        writing queries for certain question types).
+        """
+        try:
+            results = self._cols.nl2sql.handle.get(
+                where={"kind": "error"},
+                include=[],
+            )
+            ids = results.get("ids") or []
+            if ids:
+                self._cols.nl2sql.delete(ids=ids)
+                log.info("nl2sql_memory.cleared_all_errors", count=len(ids))
+            return len(ids)
+        except Exception as exc:
+            log.warning("nl2sql_memory.clear_errors_failed",
+                        error=str(exc)[:160])
+            return 0
+
     # ── Internals ──────────────────────────────────────────────────────────────
 
     def _upsert_with_conflict_check(

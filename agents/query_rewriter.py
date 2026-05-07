@@ -28,7 +28,7 @@ from typing import Optional
 import openai
 import structlog
 
-from config import OPENAI_API_KEY, OPENAI_MODEL
+from config import LLM_REQUEST_TIMEOUT, OPENAI_API_KEY, OPENAI_MODEL
 from models.query import (
     RewrittenQuery,
     Subtask,
@@ -214,7 +214,7 @@ class QueryRewriter:
         planner_memory: Optional[object] = None,
         embeddings: Optional[object] = None,
     ) -> None:
-        self._client = client or openai.OpenAI(api_key=OPENAI_API_KEY)
+        self._client = client or openai.OpenAI(api_key=OPENAI_API_KEY, timeout=LLM_REQUEST_TIMEOUT)
         self._model = model
         # Optional - used to fetch route_violation anti-patterns and inject
         # them as negative few-shot. Both must be present for the recall

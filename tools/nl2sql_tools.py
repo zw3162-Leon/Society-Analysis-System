@@ -94,9 +94,21 @@ You will be given:
 
 Rules:
 - Output ONLY one SELECT query (or a CTE WITH ... SELECT). No semicolons.
+- CRITICAL: You MUST always produce a non-empty SQL query. If you are
+  uncertain which exact pattern to use, produce your best attempt rather
+  than leaving the sql field empty or null. An imperfect query that
+  executes is always better than no query at all.
+- The "Avoid these mistakes" section describes previously failed SQL
+  PATTERNS (wrong table names, bad syntax, etc.). It does NOT mean you
+  should avoid writing SQL for that topic — only avoid the specific
+  anti-pattern shown. NL2SQL guidance takes priority when it conflicts
+  with an error lesson.
 - Treat "NL2SQL guidance from Chroma 2" as durable operating guidance.
   Follow it unless it conflicts with read-only SQL safety rules.
-- Use only the tables and columns explicitly listed in schema hints.
+- Use only the tables and columns explicitly listed in schema hints OR
+  explicitly named in the NL2SQL guidance from Chroma 2. Guidance-named
+  columns (e.g. dominant_emotion, text_tsv) are always valid even when
+  absent from the current schema hints list.
 - For free-text matching on posts.text use the existing tsvector via
   `text_tsv @@ plainto_tsquery('english', '...')`. Avoid LIKE on huge text.
 - Always add a LIMIT (the runtime will cap it).
@@ -260,6 +272,20 @@ _BUILTIN_GUIDANCE: list[tuple[str, str, str, int]] = [
         "WHERE p.posted_at >= NOW() - INTERVAL '1 day' "
         "AND p.subreddit = 'worldnews' GROUP BY t.topic_id, t.label "
         "ORDER BY post_count DESC LIMIT 100",
+        "example",
+        90,
+    ),
+    (
+        "single_topic_dominant_emotion",
+        "Example: What is the dominant emotion for the Russia-Ukraine Conflict "
+        "topic? SQL shape: SELECT "
+        "COALESCE(mode() WITHIN GROUP (ORDER BY NULLIF(p.dominant_emotion, "
+        "'')), MAX(NULLIF(t.dominant_emotion, '')), 'Not specified') AS "
+        "dominant_emotion "
+        "FROM posts_v2 p JOIN topics_v2 t ON p.topic_id = t.topic_id "
+        "WHERE t.label ILIKE '%Russia%Ukraine%' LIMIT 1. "
+        "Note: posts_v2.dominant_emotion and topics_v2.dominant_emotion are "
+        "valid columns even when not shown in schema hints.",
         "example",
         90,
     ),
@@ -594,8 +620,15 @@ class NL2SQLTool:
         embedding: list[float],
     ) -> None:
         """Push a curated error pattern into Chroma 2 (kind=error)."""
+        if not sql or not sql.strip():
+            # Empty SQL means the LLM failed to generate anything — there's
+            # no bad SQL pattern to learn from.  Recording "(no SQL produced)"
+            # creates a misleading lesson that tells future LLM calls to avoid
+            # writing SQL for this type of question, forming a failure loop.
+            log.warning("nl2sql.skip_empty_sql_lesson", nl=nl_query[:80])
+            return
         try:
-            bad_pattern = sql or "(no SQL produced)"
+            bad_pattern = sql
             self.memory.upsert_error(
                 failure_reason=f"{exc.kind}: {exc.detail[:200]}",
                 bad_pattern=f"NL: {nl_query}\nSQL: {bad_pattern}",

@@ -1,0 +1,301 @@
+{
+  "version": "1.0",
+  "description": "30 propagation analysis entries: 20 viral_cascade + 10 propagation_path. Cascade entries test that the API returns valid structure for topics with varying post volumes. Path entries test account-pair connectivity.",
+  "active_accounts": {
+    "note": "Top authors by post count from live DB (distinct_authors=1681)",
+    "UseBackground2370": 8,
+    "Koala_eiO": 6
+  },
+  "entries": [
+    {
+      "id": "prop_001",
+      "query_kind": "viral_cascade",
+      "target": {"topic_id": "topic_42ed0f68eade", "top_k": 5},
+      "topic_label": "Random Humor Exchange",
+      "post_count": 231,
+      "expected_cascade_count_min": 1,
+      "notes": "Largest topic (231 posts); reply cascades should exist"
+    },
+    {
+      "id": "prop_002",
+      "query_kind": "viral_cascade",
+      "target": {"topic_id": "topic_42ed0f68eade", "top_k": 10},
+      "topic_label": "Random Humor Exchange",
+      "post_count": 231,
+      "expected_cascade_count_min": 1,
+      "notes": "Same topic, larger top_k — should return at least as many cascades"
+    },
+    {
+      "id": "prop_003",
+      "query_kind": "viral_cascade",
+      "target": {"topic_id": "topic_17e765593c24", "top_k": 5},
+      "topic_label": "Political and Corporate Criticism",
+      "post_count": 187,
+      "expected_cascade_count_min": 1,
+      "notes": "Second largest topic (187 posts)"
+    },
+    {
+      "id": "prop_004",
+      "query_kind": "viral_cascade",
+      "target": {"topic_id": "topic_8c67d173a7be", "top_k": 5},
+      "topic_label": "Russia-Ukraine Conflict",
+      "post_count": 150,
+      "expected_cascade_count_min": 1,
+      "notes": "Major conflict topic (150 posts)"
+    },
+    {
+      "id": "prop_005",
+      "query_kind": "viral_cascade",
+      "target": {"topic_id": "topic_8c67d173a7be", "top_k": 3},
+      "topic_label": "Russia-Ukraine Conflict",
+      "post_count": 150,
+      "expected_cascade_count_min": 1,
+      "notes": "Same topic, top_k=3 — tests k-limiting behavior"
+    },
+    {
+      "id": "prop_006",
+      "query_kind": "viral_cascade",
+      "target": {"topic_id": "topic_54c93c42079e", "top_k": 5},
+      "topic_label": "Tensions in Strait",
+      "post_count": 122,
+      "expected_cascade_count_min": 1,
+      "notes": "122 posts — cascade data expected"
+    },
+    {
+      "id": "prop_007",
+      "query_kind": "viral_cascade",
+      "target": {"topic_id": "topic_da4e8dec22be", "top_k": 5},
+      "topic_label": "Global Tensions and Energy Independence",
+      "post_count": 117,
+      "expected_cascade_count_min": 1,
+      "notes": "117 posts"
+    },
+    {
+      "id": "prop_008",
+      "query_kind": "viral_cascade",
+      "target": {"topic_id": "topic_cfbdce0dc541", "top_k": 5},
+      "topic_label": "Trump Renewable Energy Criticism",
+      "post_count": 107,
+      "expected_cascade_count_min": 1,
+      "notes": "107 posts"
+    },
+    {
+      "id": "prop_009",
+      "query_kind": "viral_cascade",
+      "target": {"topic_id": "topic_9eba47d39054", "top_k": 5},
+      "topic_label": "Iran-US Relations",
+      "post_count": 106,
+      "expected_cascade_count_min": 1,
+      "notes": "106 posts"
+    },
+    {
+      "id": "prop_010",
+      "query_kind": "viral_cascade",
+      "target": {"topic_id": "topic_9eba47d39054", "top_k": 10},
+      "topic_label": "Iran-US Relations",
+      "post_count": 106,
+      "expected_cascade_count_min": 1,
+      "notes": "Same topic, top_k=10"
+    },
+    {
+      "id": "prop_011",
+      "query_kind": "viral_cascade",
+      "target": {"topic_id": "topic_e6af4b65db62", "top_k": 5},
+      "topic_label": "Drone Strikes Moscow",
+      "post_count": 96,
+      "expected_cascade_count_min": 0,
+      "notes": "96 posts; cascade existence uncertain"
+    },
+    {
+      "id": "prop_012",
+      "query_kind": "viral_cascade",
+      "target": {"topic_id": "topic_7beb7553e3f9", "top_k": 5},
+      "topic_label": "Electric Vehicles",
+      "post_count": 89,
+      "expected_cascade_count_min": 0,
+      "notes": "89 posts; smaller topic"
+    },
+    {
+      "id": "prop_013",
+      "query_kind": "viral_cascade",
+      "target": {"topic_id": "topic_3ed37237a413", "top_k": 5},
+      "topic_label": "Hantavirus Outbreak",
+      "post_count": 71,
+      "expected_cascade_count_min": 0,
+      "notes": "71 posts; smaller topic"
+    },
+    {
+      "id": "prop_014",
+      "query_kind": "viral_cascade",
+      "target": {"topic_id": "topic_490ce6d3086f", "top_k": 5},
+      "topic_label": "Ceasefire Violations",
+      "post_count": 65,
+      "expected_cascade_count_min": 0,
+      "notes": "65 posts; smaller topic"
+    },
+    {
+      "id": "prop_015",
+      "query_kind": "viral_cascade",
+      "target": {"topic_id": "topic_ea35ab196f1e", "top_k": 5},
+      "topic_label": "Iran-UAE Tensions",
+      "post_count": 53,
+      "expected_cascade_count_min": 0,
+      "notes": "53 posts; smallest large topic"
+    },
+    {
+      "id": "prop_016",
+      "query_kind": "viral_cascade",
+      "target": {"topic_id": "topic_6d46f43a8f3b", "top_k": 5},
+      "topic_label": "Conspiracy Theories Environmental Activism",
+      "post_count": null,
+      "expected_cascade_count_min": 0,
+      "notes": "Post count unknown; tests API robustness"
+    },
+    {
+      "id": "prop_017",
+      "query_kind": "viral_cascade",
+      "target": {"topic_id": "topic_4ebec7cdfbbe", "top_k": 5},
+      "topic_label": "Military Defense Capabilities",
+      "post_count": null,
+      "expected_cascade_count_min": 0,
+      "notes": "Post count unknown; tests API robustness"
+    },
+    {
+      "id": "prop_018",
+      "query_kind": "viral_cascade",
+      "target": {"topic_id": "topic_93741c53e2f4", "top_k": 5},
+      "topic_label": "Strait of Hormuz Tensions",
+      "post_count": null,
+      "expected_cascade_count_min": 0,
+      "notes": "Similar to topic_54c93c42079e"
+    },
+    {
+      "id": "prop_019",
+      "query_kind": "viral_cascade",
+      "target": {"topic_id": "topic_17e765593c24", "top_k": 3},
+      "topic_label": "Political and Corporate Criticism",
+      "post_count": 187,
+      "expected_cascade_count_min": 1,
+      "notes": "Same as prop_003 but top_k=3 tests minimum cascade return"
+    },
+    {
+      "id": "prop_020",
+      "query_kind": "viral_cascade",
+      "target": {"topic_id": "topic_da4e8dec22be", "top_k": 10},
+      "topic_label": "Global Tensions and Energy Independence",
+      "post_count": 117,
+      "expected_cascade_count_min": 1,
+      "notes": "Larger top_k for medium-sized topic"
+    },
+    {
+      "id": "prop_021",
+      "query_kind": "propagation_path",
+      "target": {
+        "source_account": "UseBackground2370",
+        "target_account": "Koala_eiO",
+        "max_hops": 6
+      },
+      "expected_path_found": null,
+      "notes": "Two most active accounts; path existence unknown without live graph query"
+    },
+    {
+      "id": "prop_022",
+      "query_kind": "propagation_path",
+      "target": {
+        "source_account": "Koala_eiO",
+        "target_account": "UseBackground2370",
+        "max_hops": 6
+      },
+      "expected_path_found": null,
+      "notes": "Reverse direction of prop_021"
+    },
+    {
+      "id": "prop_023",
+      "query_kind": "propagation_path",
+      "target": {
+        "source_account": "UseBackground2370",
+        "target_account": "UseBackground2370",
+        "max_hops": 4
+      },
+      "expected_path_found": false,
+      "notes": "Self-path should not be found (same source and target)"
+    },
+    {
+      "id": "prop_024",
+      "query_kind": "propagation_path",
+      "target": {
+        "source_account": "UseBackground2370",
+        "target_account": "nonexistent_account_xyz_abc",
+        "max_hops": 4
+      },
+      "expected_path_found": false,
+      "notes": "Non-existent target account — path must be false"
+    },
+    {
+      "id": "prop_025",
+      "query_kind": "propagation_path",
+      "target": {
+        "source_account": "nonexistent_account_xyz_abc",
+        "target_account": "Koala_eiO",
+        "max_hops": 4
+      },
+      "expected_path_found": false,
+      "notes": "Non-existent source account — path must be false"
+    },
+    {
+      "id": "prop_026",
+      "query_kind": "propagation_path",
+      "target": {
+        "source_account": "UseBackground2370",
+        "target_account": "Koala_eiO",
+        "max_hops": 2
+      },
+      "expected_path_found": null,
+      "notes": "Short max_hops=2; path less likely to be found vs. 6 hops"
+    },
+    {
+      "id": "prop_027",
+      "query_kind": "propagation_path",
+      "target": {
+        "source_account": "UseBackground2370",
+        "target_account": "Koala_eiO",
+        "max_hops": 10
+      },
+      "expected_path_found": null,
+      "notes": "Long max_hops=10; wider search — any existing path should be found"
+    },
+    {
+      "id": "prop_028",
+      "query_kind": "propagation_path",
+      "target": {
+        "source_account": "Koala_eiO",
+        "target_account": "nonexistent_account_xyz_abc",
+        "max_hops": 6
+      },
+      "expected_path_found": false,
+      "notes": "Non-existent target — validates negative path detection"
+    },
+    {
+      "id": "prop_029",
+      "query_kind": "propagation_path",
+      "target": {
+        "source_account": "",
+        "target_account": "UseBackground2370",
+        "max_hops": 4
+      },
+      "expected_path_found": false,
+      "notes": "Empty source — API should handle gracefully and return no path"
+    },
+    {
+      "id": "prop_030",
+      "query_kind": "propagation_path",
+      "target": {
+        "source_account": "UseBackground2370",
+        "target_account": "",
+        "max_hops": 4
+      },
+      "expected_path_found": false,
+      "notes": "Empty target — API should handle gracefully and return no path"
+    }
+  ]
+}

@@ -125,7 +125,7 @@ class ChatOrchestrator:
 
         # 3. Compose + Critic loop (single retry)
         with timing("compose_with_critic.latency_ms"):
-            report, verdict = self._compose_with_critic(rq, execution)
+            report, verdict, critic_attempts, critic_passed_on = self._compose_with_critic(rq, execution)
         metrics.inc("critic.verdict",
                     labels={"passed": str(verdict.passed).lower()})
         if verdict.error_kind:
@@ -172,17 +172,19 @@ class ChatOrchestrator:
             branch_outputs=_branch_outputs_payload(execution),
             citations=[c.model_dump() for c in report.citations],
             needs_human_review=report.needs_human_review,
+            critic_attempts=critic_attempts,
+            critic_passed_on=critic_passed_on,
         )
 
     # ── Internals ────────────────────────────────────────────────────────────
 
     def _compose_with_critic(
         self, rq: RewrittenQuery, execution: PlanExecutionV2,
-    ) -> tuple[ReportV2, CriticVerdict]:
+    ) -> tuple[ReportV2, CriticVerdict, int, Optional[str]]:
         report = self._writer.write(rq, execution)
         verdict = self._critic.review(report, execution)
         if verdict.passed:
-            return report, verdict
+            return report, verdict, 1, "first"
 
         log.info("orchestrator.critic_failed_first",
                  error_kind=verdict.error_kind,
@@ -191,7 +193,7 @@ class ChatOrchestrator:
         report_retry = self._writer.write(rq, execution)
         verdict_retry = self._critic.review(report_retry, execution)
         if verdict_retry.passed:
-            return report_retry, verdict_retry
+            return report_retry, verdict_retry, 2, "second"
 
         log.warning("orchestrator.critic_failed_second",
                     error_kind=verdict_retry.error_kind)
@@ -200,7 +202,7 @@ class ChatOrchestrator:
         report_retry.notes.append(
             f"critic_failed: {verdict_retry.error_kind}",
         )
-        return report_retry, verdict_retry
+        return report_retry, verdict_retry, 2, None
 
     def _record_route_violations(
         self, user_message: str, verified: VerifiedPlan,

@@ -39,6 +39,7 @@ from config import KG_TOPIC_SEMANTIC_FALLBACK_MIN_SIM
 from models.branch_output import (
     BranchExecutionStatus,
     EvidenceOutput,
+    KGNode,
     KGOutput,
     SQLAttempt,
     SQLOutput,
@@ -569,6 +570,56 @@ def _topic_claim_audit_sql(inv: BranchInvocation) -> Optional[SQLOutput]:
     return out
 
 
+def _enrich_kg_output_with_entities(out: KGOutput, query_text: str) -> None:
+    """Append Entity nodes for entities mentioned in the query.
+
+    KG analytics returns Account/Post topology (IDs, PageRank, Louvain).
+    Named entities (Iran, Russia, Trump …) won't appear unless we fetch them
+    explicitly. Without this, the report writer never mentions entity names.
+    """
+    if not query_text:
+        return
+    try:
+        from tools.kg_query_tools import KGQueryTool
+        kuzu = KGQueryTool().kuzu
+        if kuzu is None:
+            return
+        rows = kuzu._safe_execute(
+            "MATCH (e:Entity) WHERE e.name IS NOT NULL "
+            "RETURN e.id AS entity_id, e.name AS name, "
+            "e.entity_type AS entity_type, e.mention_count AS mention_count "
+            "ORDER BY e.mention_count DESC LIMIT 200",
+            {},
+        ) or []
+    except Exception:
+        return
+
+    import re as _re
+    query_lower = query_text.lower()
+    existing_ids = {n.id for n in out.nodes}
+    matched: list[str] = []
+    for r in rows:
+        name = (r.get("name") or "").strip()
+        if not name:
+            continue
+        if _re.search(r"\b" + _re.escape(name.lower()) + r"\b", query_lower):
+            eid = str(r.get("entity_id") or name)
+            if eid not in existing_ids:
+                out.nodes.append(KGNode(
+                    id=eid,
+                    label="Entity",
+                    properties={
+                        "name": name,
+                        "entity_type": r.get("entity_type") or "",
+                        "mention_count": int(r.get("mention_count") or 0),
+                    },
+                ))
+                existing_ids.add(eid)
+            matched.append(name)
+    if matched:
+        out.metrics["query_entities"] = matched
+
+
 def default_kg_runner(inv: BranchInvocation) -> KGOutput:
     """Dispatch a KG branch invocation to the right tool.
 
@@ -595,13 +646,15 @@ def default_kg_runner(inv: BranchInvocation) -> KGOutput:
     }:
         topic_id = _resolve_default_topic_id() or ""
 
+    _query = inv.payload.get("query", "")
+
     # ── propagation_trace (KGQueryTool) ──────────────────────────────────────
     if intent == "propagation_trace":
         src = inv.payload.get("source_account") or ""
         dst = inv.payload.get("target_account") or ""
         if not src or not dst:
             if topic_candidates:
-                return _first_kg_output_with_signal(
+                out = _first_kg_output_with_signal(
                     topic_candidates,
                     lambda tid: KGQueryTool().topic_reply_chains(
                         topic_id=tid,
@@ -609,29 +662,33 @@ def default_kg_runner(inv: BranchInvocation) -> KGOutput:
                         max_depth=int(inv.payload.get("max_depth", 5)),
                     ),
                 )
-            from models.branch_output import KGOutput as _KGOut
-            return _KGOut(
-                query_kind="propagation_path",
-                target={"reason": "missing source/target account"},
+            else:
+                from models.branch_output import KGOutput as _KGOut
+                out = _KGOut(
+                    query_kind="propagation_path",
+                    target={"reason": "missing source/target account"},
+                )
+        else:
+            out = KGQueryTool().propagation_path(
+                source_account=src, target_account=dst,
+                max_hops=int(inv.payload.get("max_hops", 6)),
             )
-        return KGQueryTool().propagation_path(
-            source_account=src, target_account=dst,
-            max_hops=int(inv.payload.get("max_hops", 6)),
-        )
+        _enrich_kg_output_with_entities(out, _query)
+        return out
 
     # ── cascade_query (KGQueryTool) ──────────────────────────────────────────
     if intent == "cascade_query":
-        query_text = (inv.payload.get("query") or "").lower()
+        query_text_lc = (inv.payload.get("query") or "").lower()
         if (
-            "reply chain" in query_text
-            or "reply chains" in query_text
-            or "thread" in query_text
-            or "propagation path" in query_text
-            or "propagation paths" in query_text
-            or "spread" in query_text
-            or "dissemination" in query_text
+            "reply chain" in query_text_lc
+            or "reply chains" in query_text_lc
+            or "thread" in query_text_lc
+            or "propagation path" in query_text_lc
+            or "propagation paths" in query_text_lc
+            or "spread" in query_text_lc
+            or "dissemination" in query_text_lc
         ):
-            return _first_kg_output_with_signal(
+            out = _first_kg_output_with_signal(
                 topic_candidates,
                 lambda tid: KGQueryTool().topic_reply_chains(
                     topic_id=tid,
@@ -639,13 +696,16 @@ def default_kg_runner(inv: BranchInvocation) -> KGOutput:
                     max_depth=int(inv.payload.get("max_depth", 5)),
                 ),
             )
-        return _first_kg_output_with_signal(
-            topic_candidates,
-            lambda tid: KGQueryTool().viral_cascade(
-                topic_id=tid,
-                top_k=int(inv.payload.get("top_k", 5)),
-            ),
-        )
+        else:
+            out = _first_kg_output_with_signal(
+                topic_candidates,
+                lambda tid: KGQueryTool().viral_cascade(
+                    topic_id=tid,
+                    top_k=int(inv.payload.get("top_k", 5)),
+                ),
+            )
+        _enrich_kg_output_with_entities(out, _query)
+        return out
 
     # ── KGAnalytics methods (Phase B.3) ──────────────────────────────────────
     from agents.kg_analytics import KGAnalytics
@@ -657,7 +717,7 @@ def default_kg_runner(inv: BranchInvocation) -> KGOutput:
     since_days = int(inv.payload.get("since_days", 30))
 
     if intent == "influencer_query":
-        return _first_kg_output_with_signal(
+        out = _first_kg_output_with_signal(
             topic_candidates or [""],
             lambda tid: analytics.influencer_rank(
                 topic_id=tid or None,
@@ -665,8 +725,10 @@ def default_kg_runner(inv: BranchInvocation) -> KGOutput:
                 since_days=since_days,
             ),
         )
+        _enrich_kg_output_with_entities(out, _query)
+        return out
     if intent in ("coordination_check", "propagation"):
-        return _first_kg_output_with_signal(
+        out = _first_kg_output_with_signal(
             topic_candidates or [""],
             lambda tid: analytics.coordinated_groups(
                 topic_id=tid or None,
@@ -674,8 +736,10 @@ def default_kg_runner(inv: BranchInvocation) -> KGOutput:
                 since_days=since_days,
             ),
         )
+        _enrich_kg_output_with_entities(out, _query)
+        return out
     if intent == "community_structure":
-        return _first_kg_output_with_signal(
+        out = _first_kg_output_with_signal(
             topic_candidates,
             lambda tid: analytics.echo_chamber(
                 topic_id=tid,
@@ -684,17 +748,21 @@ def default_kg_runner(inv: BranchInvocation) -> KGOutput:
                 ),
             ),
         )
+        _enrich_kg_output_with_entities(out, _query)
+        return out
 
     # Fallback: PageRank gives a more useful default than raw post counts.
     # When no topic anchor is available, run global PageRank rather than
     # returning an empty stub - the previous behaviour produced 0/0 KG cards
     # in the UI even though the analytics layer supports topic_id=None.
-    return _first_kg_output_with_signal(
+    out = _first_kg_output_with_signal(
         topic_candidates or [""],
         lambda tid: analytics.influencer_rank(
             topic_id=tid or None, top_k=10, since_days=since_days,
         ),
     )
+    _enrich_kg_output_with_entities(out, _query)
+    return out
 
 
 _ACCOUNT_ID_RE = re.compile(
