@@ -147,7 +147,7 @@ Use this path if you want to run directly from `.venv`.
 #### 1. Install
 
 ```bash
-git clone https://github.com/zw3162-Leon/Society-Analysis-System
+git clone https://github.com/yuchangyuan1/Society-Analysis-System
 cd Society-Analysis-System
 python -m venv .venv
 .venv\Scripts\activate    # Windows
