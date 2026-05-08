@@ -195,6 +195,143 @@ class PostgresService:
                     confidence = EXCLUDED.confidence
             """, (post_id, entity_id, char_start, char_end, confidence))
 
+    # ── claims_v2 (atomic claims for fact-check / topic-claim-audit) ────────
+
+    def upsert_claim_v2(
+        self,
+        *,
+        claim_id: str,
+        claim_text: str,
+        topic_id: Optional[str] = None,
+        embedding: Optional[list[float]] = None,
+        simhash: Optional[int] = None,
+        source_url: Optional[str] = None,
+        role: Optional[str] = None,
+        confidence: float = 0.5,
+        run_id: str = "legacy_pre_v6",
+    ) -> None:
+        """Upsert into claims_v2. embedding is a 1536-dim list[float]; pgvector
+        accepts the bracketed-string serialisation."""
+        emb_str = None
+        if embedding is not None:
+            emb_str = "[" + ",".join(f"{v:.7f}" for v in embedding) + "]"
+        with self.cursor() as cur:
+            cur.execute("""
+                INSERT INTO claims_v2 (claim_id, claim_text, topic_id,
+                    embedding, simhash, source_url, role, confidence,
+                    first_seen_in_run, last_updated_in_run)
+                VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                ON CONFLICT (claim_id) DO UPDATE SET
+                    topic_id    = COALESCE(EXCLUDED.topic_id, claims_v2.topic_id),
+                    embedding   = COALESCE(EXCLUDED.embedding, claims_v2.embedding),
+                    simhash     = COALESCE(EXCLUDED.simhash, claims_v2.simhash),
+                    source_url  = COALESCE(EXCLUDED.source_url, claims_v2.source_url),
+                    confidence  = GREATEST(EXCLUDED.confidence, claims_v2.confidence),
+                    extracted_at = NOW(),
+                    last_updated_in_run = EXCLUDED.last_updated_in_run
+            """, (claim_id, claim_text, topic_id, emb_str, simhash,
+                  source_url, role, confidence, run_id, run_id))
+
+    def link_post_claim_v2(
+        self,
+        *,
+        post_id: str,
+        claim_id: str,
+        role: Optional[str] = None,
+    ) -> None:
+        with self.cursor() as cur:
+            cur.execute("""
+                INSERT INTO post_claims_v2 (post_id, claim_id, role)
+                VALUES (%s,%s,%s)
+                ON CONFLICT (post_id, claim_id) DO UPDATE SET
+                    role = COALESCE(EXCLUDED.role, post_claims_v2.role)
+            """, (post_id, claim_id, role))
+
+    def search_claims_hybrid(
+        self,
+        query_text: str,
+        query_embedding: Optional[list[float]],
+        query_simhash: Optional[int],
+        *,
+        topic_id: Optional[str] = None,
+        limit: int = 20,
+    ) -> dict:
+        """Three independent ranked lists for RRF fusion downstream.
+        Returns {'cosine': [...], 'simhash': [...], 'tsv': [...]}."""
+        emb_str = None
+        if query_embedding is not None:
+            emb_str = "[" + ",".join(f"{v:.7f}" for v in query_embedding) + "]"
+        topic_clause = "AND topic_id = %s" if topic_id else ""
+        params_topic = (topic_id,) if topic_id else ()
+
+        cosine: list[dict] = []
+        simhash_hits: list[dict] = []
+        tsv_hits: list[dict] = []
+        with self.cursor() as cur:
+            if emb_str is not None:
+                cur.execute(f"""
+                    SELECT claim_id, claim_text, topic_id, source_url,
+                           simhash, role, confidence,
+                           1 - (embedding <=> %s::vector) AS score
+                    FROM claims_v2
+                    WHERE embedding IS NOT NULL
+                      {topic_clause}
+                    ORDER BY embedding <=> %s::vector
+                    LIMIT %s
+                """, (emb_str, *params_topic, emb_str, limit))
+                cosine = list(cur.fetchall())
+            if query_simhash is not None:
+                # Postgres lacks a builtin popcount on bigint XOR efficiently
+                # without an extension; do an exact pre-filter via topic and
+                # fetch a wider set then filter in Python via hamming.
+                # Cheap path: just pick rows with the same simhash first.
+                cur.execute(f"""
+                    SELECT claim_id, claim_text, topic_id, source_url,
+                           simhash, role, confidence
+                    FROM claims_v2
+                    WHERE simhash IS NOT NULL
+                      {topic_clause}
+                    LIMIT 500
+                """, params_topic)
+                rows = list(cur.fetchall())
+                # Compute hamming in Python and rank closest-first.
+                def _hd(a: int, b: int) -> int:
+                    mask = (1 << 64) - 1
+                    return ((a & mask) ^ (b & mask)).bit_count()
+                rows.sort(key=lambda r: _hd(int(r["simhash"]), int(query_simhash)))
+                simhash_hits = rows[:limit]
+            if query_text:
+                cur.execute(f"""
+                    SELECT claim_id, claim_text, topic_id, source_url,
+                           simhash, role, confidence,
+                           ts_rank(claim_text_tsv,
+                                   plainto_tsquery('english', %s)) AS score
+                    FROM claims_v2
+                    WHERE claim_text_tsv @@ plainto_tsquery('english', %s)
+                      {topic_clause}
+                    ORDER BY score DESC
+                    LIMIT %s
+                """, (query_text, query_text, *params_topic, limit))
+                tsv_hits = list(cur.fetchall())
+        return {"cosine": cosine, "simhash": simhash_hits, "tsv": tsv_hits}
+
+    def list_claims_for_topic(
+        self, topic_id: str, *, limit: int = 50,
+    ) -> list[dict]:
+        with self.cursor() as cur:
+            cur.execute("""
+                SELECT c.claim_id, c.claim_text, c.source_url, c.role,
+                       c.confidence, c.first_seen_at,
+                       COUNT(pc.post_id) AS post_count
+                FROM claims_v2 c
+                LEFT JOIN post_claims_v2 pc ON pc.claim_id = c.claim_id
+                WHERE c.topic_id = %s
+                GROUP BY c.claim_id
+                ORDER BY post_count DESC, c.first_seen_at DESC
+                LIMIT %s
+            """, (topic_id, limit))
+            return list(cur.fetchall())
+
     # ── Run lineage (production hardening Day 4) ─────────────────────────────
 
     def delete_run_data(self, run_id: str) -> dict:
@@ -205,7 +342,8 @@ class PostgresService:
         Returns counts per table for the audit log.
         """
         deleted = {"post_entities_v2": 0, "posts_v2": 0,
-                   "topics_v2": 0, "entities_v2": 0}
+                   "topics_v2": 0, "entities_v2": 0,
+                   "claims_v2": 0}
         with self.cursor() as cur:
             # Order matters: kill child FK rows first.
             cur.execute(
@@ -216,6 +354,7 @@ class PostgresService:
                 (run_id,),
             )
             deleted["post_entities_v2"] = cur.rowcount
+            # post_claims_v2 cascades via posts_v2 FK.
             cur.execute(
                 "DELETE FROM posts_v2 WHERE first_seen_in_run = %s",
                 (run_id,),
@@ -231,6 +370,11 @@ class PostgresService:
                 (run_id,),
             )
             deleted["entities_v2"] = cur.rowcount
+            cur.execute(
+                "DELETE FROM claims_v2 WHERE first_seen_in_run = %s",
+                (run_id,),
+            )
+            deleted["claims_v2"] = cur.rowcount
         return deleted
 
     # ── schema_meta (Schema-aware Agent double-write) ────────────────────────

@@ -73,6 +73,13 @@ Rules:
   which lack enough evidence" -> one `topic_claim_audit` subtask with
   suggested_branches ["nl2sql", "evidence"]. Keep the user's topic phrase
   in targets.topic_id if it is a label/name rather than a raw topic_id.
+- "list claims in topic T" / "what claims are being discussed in topic T" /
+  "show me the claims about X" -> ONE `community_listing` subtask with
+  suggested_branches ["nl2sql"] only. Claims live in claims_v2; no evidence
+  branch is required for plain enumeration.
+- "what is the dominant emotion in topic T" / "how does topic T feel" /
+  "topic T's sentiment" -> ONE `community_count` subtask with
+  ["nl2sql"]. No evidence, no kg.
 
 KG-specialised intents (KEY UPGRADE; pick these whenever applicable):
   - propagation_trace   : "path from A to B" / "did X end up replying to Y" ->
@@ -129,6 +136,22 @@ shallow GROUP-BY answers that miss the structure of the spread.
 - Output STRICT JSON only. No prose. No markdown fences.
 
 DISAMBIGUATION RULES (read carefully; common past mistakes):
+
+(R0) DO NOT classify a question as `fact_check` or `topic_claim_audit` unless
+     the user EXPLICITLY asks for verification, contradiction, or comparison
+     against official sources. Required signal words include:
+       "verify", "fact-check", "fact check", "contradict", "supported by",
+       "consistent with", "agree with official", "compared with official
+       sources", "is this true", "do sources back".
+     Mere mention of "claims" or "official sources" is NOT enough.
+     - "list the claims in topic T" -> community_listing (nl2sql only).
+     - "what claims are people making about X" -> community_listing.
+     - "what is the dominant emotion / sentiment in topic T" ->
+       community_count (nl2sql only).
+     - "list topics from worldnews" -> community_listing.
+     Routing those to fact_check / topic_claim_audit triggers a wasted
+     evidence branch and historically caused the NL2SQL agent to invent
+     `posts_v2.source IN ('AP','BBC',...)` filters.
 
 (R1) "Knowledge Graph" in the question is NOT a hint about intent. The KG is
      simply the data source. The SPECIFIC kg_query_kind comes from the verb

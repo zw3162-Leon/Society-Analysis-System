@@ -32,6 +32,7 @@ if hasattr(sys.stderr, "buffer"):
 
 import structlog
 
+from agents.claim_extractor import ClaimExtractor
 from agents.entity_extractor import EntityExtractor
 from agents.ingestion import IngestionAgent
 from agents.knowledge import KnowledgeAgent
@@ -140,6 +141,7 @@ def main() -> int:
         post_deduper=PostDeduper(),
         schema_agent=SchemaAgent(),
         schema_sync=schema_sync,
+        claim_extractor=ClaimExtractor(),
         pg=pg,
         kuzu=kuzu,
     )

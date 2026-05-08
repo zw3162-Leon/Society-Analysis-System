@@ -101,7 +101,10 @@ class _BranchRouter:
         # Fact-check NEEDS official sources, but the community angle
         # (who is actually saying it on Reddit) is part of the answer.
         "fact_check":         ["evidence", "nl2sql"],
-        "topic_claim_audit":  ["nl2sql", "evidence"],
+        # Topic-claim audits are answered from claims_v2; only fan out to
+        # evidence when the user explicitly asks for official-source
+        # comparison (the rewriter signals this through suggested_branches).
+        "topic_claim_audit":  ["nl2sql"],
         # Recap an authoritative source. Add nl2sql so we can say
         # whether the community discussed it.
         "official_recap":     ["evidence", "nl2sql"],
@@ -135,6 +138,52 @@ _TOPIC_SCOPED_INTENTS = {
     "propagation_trace", "influencer_query", "coordination_check",
     "community_structure", "cascade_query",
 }
+
+# Intents that should consult claim_search to pre-resolve claim_ids before
+# NL2SQL writes SQL.
+_CLAIM_SCOPED_INTENTS = {"fact_check", "topic_claim_audit"}
+
+
+# Phrases the Rewriter sometimes leaves in nl_query that nudge NL2SQL into
+# inventing `posts_v2.source IN ('AP', 'BBC', ...)` filters. The community-
+# side branch (NL2SQL) never queries official sources; strip these as a
+# defence-in-depth measure on top of the Chroma 2 guidance.
+_OUTLET_TOKEN = (
+    r"(?:ap|reuters|bbc|nyt|new york times|associated press|xinhua|cnn)"
+)
+_OUTLET_LIST = (
+    rf"{_OUTLET_TOKEN}"
+    # Separators: ',', ', and', '/', or bare 'and' (handles Oxford comma).
+    rf"(?:\s*(?:,(?:\s+and)?|/|\band\b)\s*{_OUTLET_TOKEN})*"
+)
+_OFFICIAL_SOURCE_NOISE = re.compile(
+    r"\b(?:using|with|from|via|such as|including|based on|against|compared(?:\s+(?:to|with))?|"
+    r"vs\.?|versus)\s+"
+    r"(?:the\s+)?"
+    r"(?:"
+    r"official(?:/evidence)?(?:\s+(?:sources?|news|reporting))?(?:\s+such\s+as\s+" + _OUTLET_LIST + r")?"
+    r"|authoritative\s+sources?(?:\s+such\s+as\s+" + _OUTLET_LIST + r")?"
+    r"|news\s+outlets?(?:\s+such\s+as\s+" + _OUTLET_LIST + r")?"
+    r"|" + _OUTLET_LIST +
+    r")",
+    re.IGNORECASE,
+)
+
+
+def _scrub_official_source_mentions(text: str) -> str:
+    """Strip 'using AP / Reuters / BBC / NYT' style framing from NL2SQL input.
+
+    NL2SQL only queries the community side (posts_v2 / claims_v2 / topics_v2).
+    Leaving outlet names in the prompt frequently produces SQL like
+    `WHERE p.source IN ('AP','BBC','Reuters','NYT')` which is guaranteed to
+    match zero rows — posts_v2.source is the platform tag (always 'reddit').
+    Evidence retrieval against those outlets happens in a separate branch.
+    """
+    if not text:
+        return text
+    cleaned = _OFFICIAL_SOURCE_NOISE.sub("", text)
+    cleaned = re.sub(r"\s{2,}", " ", cleaned).strip(" ,;:")
+    return cleaned or text  # never collapse to empty
 
 
 # KG-specialised intent → (KG analytics method, default kwargs).
@@ -200,6 +249,12 @@ class BoundedPlannerV2:
             # Pre-resolve semantic topic match for topic-scoped subtasks
             # so NL2SQL / KG get a concrete topic_id list to filter on.
             resolved_topic_ids = self._resolve_topics_for_subtask(sub)
+            # Pre-resolve semantic claim match for fact-check / claim-audit
+            # subtasks so NL2SQL gets a concrete claim_id list (replaces
+            # `posts_v2.text_tsv @@ ...` lexical guessing).
+            resolved_claim_hints = self._resolve_claims_for_subtask(
+                sub, resolved_topic_ids,
+            )
             for branch in branches:
                 if len(invocations) >= self.max_branch_calls:
                     break
@@ -208,6 +263,7 @@ class BoundedPlannerV2:
                     branch=branch,
                     payload=self._build_payload(
                         branch, sub, resolved_topic_ids,
+                        resolved_claim_hints=resolved_claim_hints,
                     ),
                 ))
             if len(invocations) >= self.max_branch_calls:
@@ -271,12 +327,61 @@ class BoundedPlannerV2:
             for m in matches
         ]
 
+    def _resolve_claims_for_subtask(
+        self,
+        sub: Subtask,
+        resolved_topic_ids: Optional[list[dict]] = None,
+    ) -> list[dict]:
+        """Hybrid claim_search for fact_check / topic_claim_audit subtasks.
+
+        Returns up to N {claim_id, claim_text, score} hints for NL2SQL to
+        inject into its prompt. Topic-scoped audits filter by topic_id.
+        """
+        if sub.intent not in _CLAIM_SCOPED_INTENTS:
+            return []
+        try:
+            from tools.claim_search import ClaimSearchTool
+        except Exception as exc:
+            log.warning("planner_v2.claim_search_unavailable",
+                        error=str(exc)[:160])
+            return []
+        topic_id: Optional[str] = None
+        if resolved_topic_ids:
+            topic_id = resolved_topic_ids[0].get("topic_id")
+        try:
+            tool = ClaimSearchTool()
+            top_k = 8 if sub.intent == "topic_claim_audit" else 5
+            hits = tool.search(
+                _scrub_official_source_mentions(sub.text),
+                topic_id=topic_id,
+                top_k=top_k,
+            )
+        except Exception as exc:
+            log.warning("planner_v2.claim_search_error",
+                        error=str(exc)[:160])
+            return []
+        if not hits:
+            return []
+        log.info("planner_v2.claims_resolved",
+                 phrase=sub.text[:80],
+                 topic_id=topic_id,
+                 matches=[(h.claim_id, h.claim_text[:60],
+                           round(h.score, 3)) for h in hits])
+        return [
+            {"claim_id": h.claim_id, "claim_text": h.claim_text,
+             "topic_id": h.topic_id, "source_url": h.source_url,
+             "score": round(h.score, 4)}
+            for h in hits
+        ]
+
     @staticmethod
     def _build_payload(
         branch: BranchName, sub: Subtask,
         resolved_topic_ids: Optional[list[dict]] = None,
+        resolved_claim_hints: Optional[list[dict]] = None,
     ) -> dict:
         resolved_topic_ids = resolved_topic_ids or []
+        resolved_claim_hints = resolved_claim_hints or []
         topic_id_list = [t["topic_id"] for t in resolved_topic_ids]
 
         if branch == "evidence":
@@ -295,11 +400,16 @@ class BoundedPlannerV2:
                 "metadata_filter": sub.targets.metadata_filter,
             }
         if branch == "nl2sql":
-            payload = {"nl_query": sub.text, "intent": sub.intent}
+            payload = {
+                "nl_query": _scrub_official_source_mentions(sub.text),
+                "intent": sub.intent,
+            }
             if topic_id_list:
                 # Append a structured hint that NL2SQL's prompt knows
                 # to consume.
                 payload["topic_id_hints"] = resolved_topic_ids
+            if resolved_claim_hints:
+                payload["claim_id_hints"] = resolved_claim_hints
             return payload
         if branch == "kg":
             payload: dict[str, Any] = {"intent": sub.intent, "query": sub.text}
@@ -498,14 +608,18 @@ def default_nl2sql_runner(inv: BranchInvocation) -> SQLOutput:
     return NL2SQLTool().answer(
         inv.payload.get("nl_query", ""),
         topic_id_hints=inv.payload.get("topic_id_hints"),
+        claim_id_hints=inv.payload.get("claim_id_hints"),
     )
 
 
 def _topic_claim_audit_sql(inv: BranchInvocation) -> Optional[SQLOutput]:
     """Deterministic SQL for topic-scoped claim audits.
 
-    The task needs source rows for claim extraction, not an aggregate. Keeping
-    this path deterministic avoids NL2SQL drifting into counts or topic lists.
+    Queries claims_v2 directly so the report writer gets the canonical claim
+    text (extracted from submission titles), each claim's source URL, and
+    supporting Reddit context. The previous implementation returned raw
+    posts_v2 rows, which forced the writer to invent claim phrasing — the
+    failure mode that motivated claims_v2 in the first place.
     """
     hints = inv.payload.get("topic_id_hints") or []
     topic_ids = [
@@ -517,15 +631,19 @@ def _topic_claim_audit_sql(inv: BranchInvocation) -> Optional[SQLOutput]:
         return None
 
     final_sql = (
-        "SELECT p.post_id, p.author, p.subreddit, p.posted_at, "
-        "p.like_count, p.reply_count, p.dominant_emotion, "
-        "t.topic_id, t.label AS topic_label, p.text "
-        "FROM posts_v2 p "
-        "LEFT JOIN topics_v2 t ON p.topic_id = t.topic_id "
-        "WHERE p.source = 'reddit' "
-        f"AND p.topic_id IN ({', '.join(repr(t) for t in topic_ids)}) "
-        "ORDER BY (p.like_count + p.reply_count) DESC, "
-        "p.posted_at DESC NULLS LAST "
+        "SELECT c.claim_id, c.claim_text, c.source_url, c.confidence, "
+        "c.topic_id, t.label AS topic_label, "
+        "COUNT(DISTINCT p.author) AS distinct_authors, "
+        "COUNT(pc.post_id) AS post_count, "
+        "MIN(p.posted_at) AS first_seen "
+        "FROM claims_v2 c "
+        "LEFT JOIN topics_v2 t      ON t.topic_id = c.topic_id "
+        "LEFT JOIN post_claims_v2 pc ON pc.claim_id = c.claim_id "
+        "LEFT JOIN posts_v2 p       ON p.post_id  = pc.post_id "
+        f"WHERE c.topic_id IN ({', '.join(repr(t) for t in topic_ids)}) "
+        "GROUP BY c.claim_id, c.claim_text, c.source_url, c.confidence, "
+        "c.topic_id, t.label "
+        "ORDER BY post_count DESC, c.confidence DESC "
         "LIMIT 20"
     )
 
@@ -533,9 +651,9 @@ def _topic_claim_audit_sql(inv: BranchInvocation) -> Optional[SQLOutput]:
         nl_query=inv.payload.get("nl_query", ""),
         final_sql=final_sql,
         columns=[
-            "post_id", "author", "subreddit", "posted_at",
-            "like_count", "reply_count", "dominant_emotion",
-            "topic_id", "topic_label", "text",
+            "claim_id", "claim_text", "source_url", "confidence",
+            "topic_id", "topic_label",
+            "distinct_authors", "post_count", "first_seen",
         ],
     )
     try:
@@ -545,15 +663,19 @@ def _topic_claim_audit_sql(inv: BranchInvocation) -> Optional[SQLOutput]:
         with pg.cursor() as cur:
             cur.execute(
                 """
-                SELECT p.post_id, p.author, p.subreddit, p.posted_at,
-                       p.like_count, p.reply_count, p.dominant_emotion,
-                       t.topic_id, t.label AS topic_label, p.text
-                FROM posts_v2 p
-                LEFT JOIN topics_v2 t ON p.topic_id = t.topic_id
-                WHERE p.source = 'reddit'
-                  AND p.topic_id = ANY(%s)
-                ORDER BY (p.like_count + p.reply_count) DESC,
-                         p.posted_at DESC NULLS LAST
+                SELECT c.claim_id, c.claim_text, c.source_url, c.confidence,
+                       c.topic_id, t.label AS topic_label,
+                       COUNT(DISTINCT p.author) AS distinct_authors,
+                       COUNT(pc.post_id) AS post_count,
+                       MIN(p.posted_at) AS first_seen
+                FROM claims_v2 c
+                LEFT JOIN topics_v2 t      ON t.topic_id = c.topic_id
+                LEFT JOIN post_claims_v2 pc ON pc.claim_id = c.claim_id
+                LEFT JOIN posts_v2 p       ON p.post_id  = pc.post_id
+                WHERE c.topic_id = ANY(%s)
+                GROUP BY c.claim_id, c.claim_text, c.source_url,
+                         c.confidence, c.topic_id, t.label
+                ORDER BY post_count DESC, c.confidence DESC
                 LIMIT 20
                 """,
                 (topic_ids,),

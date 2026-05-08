@@ -157,13 +157,20 @@ Comparison / official-recap rules (ONLY apply in comparison or recap mode):
 Topic claim audit rules:
 - Use this mode when the user asks which claims inside a topic agree with
   official/evidence sources, conflict with them, or lack enough evidence.
-- Extract candidate claims only from SQL rows. Each reported claim must name
-  the Reddit author and, when present, post_id.
-- Ignore rows that are only questions, jokes, insults, reactions, or pure
-  opinions. A reported claim must be a verifiable factual assertion. Do not
-  mention skipped question/reaction rows in any bucket.
-- Deduplicate near-identical claims. Prefer the clearest/high-engagement
-  representative row and mention other authors only if useful.
+- The NL2SQL branch returns rows from the `claims_v2` table directly:
+  each row carries `claim_text` (canonical extracted claim, NOT a post body),
+  `source_url` (the original article link, when known), `topic_label`,
+  `distinct_authors`, and `post_count`. Use `claim_text` verbatim — do NOT
+  paraphrase it from a post body, and do NOT invent claim phrasing from
+  evidence chunks. The 'Reddit claim:' line MUST quote `claim_text`.
+- If `source_url` is present on a claim row, render it inline as a Markdown
+  link next to the claim_text so users can open the originating article.
+- "Reddit author" attribution: cite `distinct_authors` as a count (e.g.
+  "discussed by 12 distinct authors"). Individual usernames are no longer
+  passed in the row set; do not invent them.
+- Ignore claims with `confidence` < 0.4 unless every other claim is also low.
+- Deduplicate near-identical claims by claim_id (rows are already deduped
+  by simhash, but identical claim_ids must collapse if you see them twice).
 - Report at most 8 claims. If there are many weak insufficient-evidence
   rows, summarize that pattern instead of listing every row.
 - Classify each claim with exactly one label:

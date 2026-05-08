@@ -105,6 +105,7 @@ def _run_official_ingestion(args: dict) -> dict:
 
 
 def _run_precompute_v2(args: dict) -> dict:
+    from agents.claim_extractor import ClaimExtractor
     from agents.entity_extractor import EntityExtractor
     from agents.ingestion import IngestionAgent
     from agents.knowledge import KnowledgeAgent
@@ -143,6 +144,7 @@ def _run_precompute_v2(args: dict) -> dict:
         post_deduper=PostDeduper(),
         schema_agent=SchemaAgent(),
         schema_sync=SchemaSync(pg=pg),
+        claim_extractor=ClaimExtractor(),
         pg=pg,
         kuzu=kuzu,
     )

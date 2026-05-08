@@ -15,6 +15,7 @@
 -- ============================================================
 
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
+CREATE EXTENSION IF NOT EXISTS vector;
 
 -- ---------- posts_v2 -------------------------------------------------------
 CREATE TABLE IF NOT EXISTS posts_v2 (
@@ -148,6 +149,62 @@ CREATE TABLE IF NOT EXISTS post_entities_v2 (
 );
 CREATE INDEX IF NOT EXISTS idx_post_entities_v2_entity
     ON post_entities_v2(entity_id);
+
+-- ---------- claims_v2 ------------------------------------------------------
+-- Atomic claims extracted per Reddit post (and from parent submission
+-- titles for link-post replies). Stored as first-class so:
+--   - "list claims in topic T" / "list claims about X" answer from PG, not
+--     from LLM hallucination over post text;
+--   - fact-check queries can match by embedding cosine + simhash hamming +
+--     tsvector keyword without scraping post text at query time.
+-- Many-to-many to posts_v2: same claim is often paraphrased by multiple
+-- commenters; a single comment can also reference multiple claims.
+CREATE TABLE IF NOT EXISTS claims_v2 (
+    claim_id          TEXT PRIMARY KEY,        -- sha256(normalized_text)[:12]
+    claim_text        TEXT NOT NULL,
+    topic_id          TEXT,                    -- FK to topics_v2; nullable until clusterer assigns
+    embedding         vector(1536),            -- pgvector; NULL if embed failed
+    simhash           BIGINT,                  -- 64-bit simhash for near-dup search
+    claim_text_tsv    tsvector,                -- maintained by trigger below
+    source_url        TEXT,                    -- linked article URL (for link-post claims) or null
+    role              TEXT,                    -- 'asserts' | 'discusses' | 'rebuts' | 'parent_context'
+    confidence        REAL DEFAULT 0.5,        -- LLM confidence
+    extra             JSONB NOT NULL DEFAULT '{}'::jsonb,
+    first_seen_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    extracted_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    first_seen_in_run TEXT NOT NULL DEFAULT 'legacy_pre_v6',
+    last_updated_in_run TEXT NOT NULL DEFAULT 'legacy_pre_v6'
+);
+
+CREATE OR REPLACE FUNCTION claims_v2_tsv_trigger() RETURNS trigger AS $$
+BEGIN
+    NEW.claim_text_tsv := to_tsvector('english', COALESCE(NEW.claim_text, ''));
+    RETURN NEW;
+END
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS claims_v2_tsv_update ON claims_v2;
+CREATE TRIGGER claims_v2_tsv_update
+    BEFORE INSERT OR UPDATE OF claim_text ON claims_v2
+    FOR EACH ROW EXECUTE FUNCTION claims_v2_tsv_trigger();
+
+CREATE INDEX IF NOT EXISTS idx_claims_v2_topic         ON claims_v2(topic_id);
+CREATE INDEX IF NOT EXISTS idx_claims_v2_simhash       ON claims_v2(simhash);
+CREATE INDEX IF NOT EXISTS idx_claims_v2_text_tsv      ON claims_v2 USING GIN (claim_text_tsv);
+CREATE INDEX IF NOT EXISTS idx_claims_v2_text_trgm     ON claims_v2 USING GIN (claim_text gin_trgm_ops);
+-- pgvector ANN index. Cosine distance; 16 connections, ef_construction 64.
+-- Built lazily; ok if collection is initially small.
+CREATE INDEX IF NOT EXISTS idx_claims_v2_embedding_hnsw
+    ON claims_v2 USING hnsw (embedding vector_cosine_ops);
+
+-- post_claims_v2: M:N link
+CREATE TABLE IF NOT EXISTS post_claims_v2 (
+    post_id   TEXT NOT NULL REFERENCES posts_v2(post_id) ON DELETE CASCADE,
+    claim_id  TEXT NOT NULL REFERENCES claims_v2(claim_id) ON DELETE CASCADE,
+    role      TEXT,                              -- per-link role override
+    PRIMARY KEY (post_id, claim_id)
+);
+CREATE INDEX IF NOT EXISTS idx_post_claims_v2_claim ON post_claims_v2(claim_id);
 
 -- ---------- schema_meta ----------------------------------------------------
 -- Per-column descriptions and fingerprints. Mirrored to Chroma 2 by

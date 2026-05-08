@@ -101,6 +101,7 @@ def _delete_reddit_rows(subreddits: list[str]) -> dict[str, int]:
         "posts_v2": 0,
         "orphan_topics_v2": 0,
         "orphan_entities_v2": 0,
+        "orphan_claims_v2": 0,
     }
     with pg.cursor() as cur:
         cur.execute(
@@ -143,6 +144,15 @@ def _delete_reddit_rows(subreddits: list[str]) -> dict[str, int]:
             """
         )
         deleted["orphan_entities_v2"] = int(cur.rowcount or 0)
+        cur.execute(
+            """
+            DELETE FROM claims_v2 c
+            WHERE NOT EXISTS (
+                SELECT 1 FROM post_claims_v2 pc WHERE pc.claim_id = c.claim_id
+            )
+            """
+        )
+        deleted["orphan_claims_v2"] = int(cur.rowcount or 0)
     return deleted
 
 

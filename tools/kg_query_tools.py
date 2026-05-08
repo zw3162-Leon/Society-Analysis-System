@@ -141,6 +141,23 @@ class KGQueryTool:
         # gets natural-language context instead of opaque ids.
         post_meta = _fetch_post_meta(set(all_post_ids))
 
+        # Drop chains whose posts cannot be hydrated. Kuzu retains nodes
+        # across overwrite imports while Postgres is wiped per subreddit;
+        # paths that route through orphan Kuzu posts produce empty
+        # author/text strings and force the Writer to invent a narrative.
+        # Prefer fully-hydratable chains; if none survive, fall back to
+        # the original set rather than returning an empty path.
+        hydrated_chains = [
+            ids for ids in chains
+            if all((post_meta.get(p, {}).get("author") or "").strip()
+                   for p in ids)
+        ]
+        if hydrated_chains:
+            chains = hydrated_chains
+            log.info("kg.propagation_path.filtered_orphans",
+                     kept=len(hydrated_chains),
+                     dropped=len(all_post_ids) - sum(len(c) for c in hydrated_chains))
+
         seen_posts: set[str] = set()
         for ids in chains:
             prev = None

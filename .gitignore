@@ -66,15 +66,19 @@ desktop.ini
 .claude/
 
 # ── Project runtime data ──────────────────────────────────────────────────
-# Everything under data/ is regeneratable: pipeline + chat recreate it.
-# Keep the directory itself (so checkout doesn't fail) but ignore contents.
-data/chroma/
-data/kuzu_graph
-data/kuzu_graph.wal
-data/kuzu_graph.lock
+# The pre-loaded snapshot ships with the repo so the grader can use the
+# system end-to-end after `docker compose up` — without re-running
+# ingestion. Concretely we commit:
+#   data/chroma/          — 3 Chroma collections (HNSW indexes)
+#   data/kuzu_graph       — Kuzu graph DB (single binary file)
+#   data/official_chunks/ — JSONL of fetched RSS items per source
+#   db/snapshot_data.sql.gz — pg_dump that initdb auto-restores on first boot
+# The runtime-only artifacts below are ignored (they are produced per
+# session and have no value to ship):
 data/runs/
 data/sessions/
-data/official_chunks/
+data/kuzu_graph.wal
+data/kuzu_graph.lock
 data/*.db
 data/*.jsonl
 data/*.png

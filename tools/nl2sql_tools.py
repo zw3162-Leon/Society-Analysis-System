@@ -322,6 +322,7 @@ class NL2SQLTool:
         self,
         nl_query: str,
         topic_id_hints: Optional[list[dict]] = None,
+        claim_id_hints: Optional[list[dict]] = None,
     ) -> SQLOutput:
         t0 = time.monotonic()
         out = SQLOutput(nl_query=nl_query)
@@ -348,6 +349,7 @@ class NL2SQLTool:
         prompt_user = self._build_user_prompt(
             nl_query, guidance_hits, schema_hits, success_hits, error_hits,
             topic_id_hints=topic_id_hints,
+            claim_id_hints=claim_id_hints,
         )
 
         # 2. Generate + execute + repair loop
@@ -431,6 +433,7 @@ class NL2SQLTool:
         success_hits: list[dict],
         error_hits: list[dict],
         topic_id_hints: Optional[list[dict]] = None,
+        claim_id_hints: Optional[list[dict]] = None,
     ) -> str:
         sections: list[str] = [f"Question: {nl_query}"]
         if topic_id_hints:
@@ -444,6 +447,21 @@ class NL2SQLTool:
             ]
             sections.append(
                 "Pre-resolved topic_ids (use these instead of label matching):"
+            )
+            sections.extend(hint_lines)
+        if claim_id_hints:
+            # Hybrid claim_search has already located semantically matching
+            # claims_v2 rows. Use these claim_ids directly instead of
+            # writing a fresh embedding/tsvector match in SQL.
+            hint_lines = [
+                f"  - {h['claim_id']!r} (text={h.get('claim_text','')[:90]!r}, "
+                f"score={h.get('score', 0):.3f})"
+                for h in claim_id_hints
+            ]
+            sections.append(
+                "Pre-resolved claim_ids from hybrid claim_search "
+                "(use WHERE c.claim_id IN (...) on claims_v2 instead of "
+                "matching claim phrasing manually):"
             )
             sections.extend(hint_lines)
         if guidance_hits:

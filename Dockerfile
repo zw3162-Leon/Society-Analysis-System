@@ -11,7 +11,6 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 COPY pyproject.toml README.md ./
-COPY PROJECT_REDESIGN_V2.md workflow.md ./
 COPY config.py main.py ./
 COPY agents ./agents
 COPY api ./api

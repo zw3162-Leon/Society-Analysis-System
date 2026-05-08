@@ -80,6 +80,7 @@ class PrecomputePipelineV2:
         "normalize",
         "emotion_baseline",
         "topic_cluster",
+        "extract_claims",
         "schema_propose",
         "persist_v2",
     ]
@@ -94,6 +95,7 @@ class PrecomputePipelineV2:
         post_deduper=None,       # agents.post_dedup.PostDeduper
         schema_agent=None,       # agents.schema_agent.SchemaAgent
         schema_sync=None,        # services.schema_sync.SchemaSync
+        claim_extractor=None,    # agents.claim_extractor.ClaimExtractor
         pg=None,                 # services.postgres_service.PostgresService
         kuzu=None,               # services.kuzu_service.KuzuService
     ) -> None:
@@ -105,8 +107,10 @@ class PrecomputePipelineV2:
         self._post_deduper = post_deduper
         self._schema_agent = schema_agent
         self._schema_sync = schema_sync
+        self._claim_extractor = claim_extractor
         self._pg = pg
         self._kuzu = kuzu
+        self._claim_result = None  # populated in stage 6
 
     # ── Entry point ───────────────────────────────────────────────────────────
 
@@ -158,11 +162,15 @@ class PrecomputePipelineV2:
         ) or []
         result.topics = topics
 
-        # 6 - schema_propose (Phase 2.2 + 2.4 double-write)
+        # 6 - extract_claims (atomic claims from submission titles + comment links)
+        self._stage(result, "extract_claims",
+                    lambda: self._extract_claims(posts))
+
+        # 7 - schema_propose (Phase 2.2 + 2.4 double-write)
         self._stage(result, "schema_propose",
                     lambda: self._propose_schema(posts, run_id, result))
 
-        # 7 - persist_v2 (Phase 2.5 + 2.6 PG + Kuzu writes)
+        # 8 - persist_v2 (Phase 2.5 + 2.6 PG + Kuzu writes)
         self._stage(result, "persist_v2",
                     lambda: self._persist_v2(posts, topics, result))
 
@@ -238,6 +246,13 @@ class PrecomputePipelineV2:
         if self._topic_clusterer is None or not posts:
             return []
         return self._topic_clusterer.cluster(posts)
+
+    def _extract_claims(self, posts: list[Post]) -> Any:
+        if self._claim_extractor is None or not posts:
+            self._claim_result = None
+            return None
+        self._claim_result = self._claim_extractor.extract(posts)
+        return self._claim_result
 
     def _propose_schema(
         self, posts: list[Post], run_id: str, result: PipelineV2Result,
@@ -329,6 +344,39 @@ class PrecomputePipelineV2:
                 except Exception as exc:
                     log.error("pipeline_v2.entity_upsert_error",
                               entity=span.name, error=str(exc)[:120])
+
+        # Claims (atomic claim extraction; M:N to posts)
+        if self._claim_result is not None:
+            for claim in self._claim_result.claims:
+                try:
+                    self._pg.upsert_claim_v2(
+                        claim_id=claim.claim_id,
+                        claim_text=claim.claim_text,
+                        topic_id=claim.topic_id,
+                        embedding=claim.embedding,
+                        simhash=claim.simhash,
+                        source_url=claim.source_url,
+                        role=claim.role,
+                        confidence=claim.confidence,
+                        run_id=run_id,
+                    )
+                except Exception as exc:
+                    log.error("pipeline_v2.upsert_claim_v2_error",
+                              claim_id=claim.claim_id, error=str(exc)[:160])
+            for link in self._claim_result.links:
+                if link.post_id in skip_ids:
+                    continue
+                try:
+                    self._pg.link_post_claim_v2(
+                        post_id=link.post_id,
+                        claim_id=link.claim_id,
+                        role=link.role,
+                    )
+                except Exception as exc:
+                    log.error("pipeline_v2.link_post_claim_v2_error",
+                              post_id=link.post_id,
+                              claim_id=link.claim_id,
+                              error=str(exc)[:160])
 
         # Kuzu writes - production hardening Day 6: collect everything
         # first, then issue per-table batches via the bulk_* APIs. This

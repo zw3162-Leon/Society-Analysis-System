@@ -289,7 +289,9 @@ SEED_MODULE_CARDS: list[ModuleCard] = [
     ModuleCard(
         name="evidence",
         description=("Hybrid (dense + BM25 + RRF + rerank) retrieval over "
-                      "Chroma 1, the official-sources collection."),
+                      "Chroma 1, the official-sources collection. Use ONLY "
+                      "when the user explicitly wants authoritative reporting "
+                      "compared to or surfaced for the community side."),
         when_to_use=[
             "User asks for fact-check evidence from authoritative outlets.",
             "User wants to compare community claims against official reporting.",
@@ -298,6 +300,11 @@ SEED_MODULE_CARDS: list[ModuleCard] = [
         when_not_to_use=[
             "Pure structural questions about who posted / how often.",
             "Questions about graph relationships between accounts.",
+            "Listing claims / topics / community emotion inside the Reddit "
+            "corpus — those questions are answered by nl2sql alone, even "
+            "when the user mentions claims. Adding evidence here just "
+            "fans out a wasted official-source query.",
+            "Anything that does not explicitly need authoritative comparison.",
         ],
         input_schema={
             "query": "string",
@@ -312,21 +319,42 @@ SEED_MODULE_CARDS: list[ModuleCard] = [
     ModuleCard(
         name="nl2sql",
         description=("Generates and executes a safe read-only Postgres "
-                      "SELECT against posts_v2 / topics_v2 / entities_v2."),
+                      "SELECT against posts_v2 / topics_v2 / entities_v2 / "
+                      "claims_v2 / post_claims_v2. Owns the COMMUNITY side: "
+                      "what was said, who said it, how often, and which "
+                      "atomic claims they discussed. Fact-check / claim-"
+                      "audit queries on Reddit data should land here, not "
+                      "on evidence — claims_v2 stores the canonical claim "
+                      "text and a hybrid claim_search (cosine + simhash + "
+                      "tsvector) finds matching claims even when the user's "
+                      "phrasing diverges from the original."),
         when_to_use=[
             "Counting / filtering / grouping over community posts.",
             "Topic-scoped questions ('show me posts in topic T').",
             "Time-window queries on posted_at.",
+            "Listing claims in a topic (read claims_v2; do not regenerate "
+            "claim text from posts_v2).",
+            "Fact-checking a Reddit claim against the community corpus "
+            "(use claim_search via claim_id_hints).",
         ],
         when_not_to_use=[
             "Questions about graph paths or centrality - use the kg branch.",
-            "Open-ended fact-check questions - use the evidence branch.",
+            "Pulling official-news evidence (BBC / NYT / Reuters / AP / "
+            "Xinhua) - that's the evidence branch over chroma_official.",
         ],
-        input_schema={"nl_query": "string"},
+        input_schema={
+            "nl_query": "string",
+            "topic_id_hints": "list of {topic_id,label,similarity} (optional)",
+            "claim_id_hints": "list of {claim_id,claim_text,score} from "
+                               "hybrid claim_search (optional)",
+        },
         output_schema={"sql_output": "SQLOutput (final_sql, rows, attempts)"},
         examples=[
             {"question": "How many posts in topic T have dominant_emotion='anger'?"},
             {"question": "List the top 10 authors in the last 7 days."},
+            {"question": "List the claims discussed in topic T with author counts."},
+            {"question": "Which Reddit claims about the Iran ceasefire match "
+                          "the BBC story (semantic match via claim_search)?"},
         ],
     ),
     ModuleCard(
@@ -399,6 +427,29 @@ SEED_WORKFLOW_EXEMPLARS: list[WorkflowExemplar] = [
         branches_used=["nl2sql", "kg"],
         rationale="Trending = volume by topic (nl2sql) + the amplifier "
                   "structure behind each topic (kg).",
+    ),
+    WorkflowExemplar(
+        question="List the claims in the topic about the Iran ceasefire.",
+        branches_used=["nl2sql"],
+        rationale="Pure community-side enumeration. claims_v2 + "
+                  "post_claims_v2 already stores the canonical claim text; "
+                  "do NOT route to evidence — official sources are not the "
+                  "answer to 'list claims', and adding the evidence branch "
+                  "wastes a call.",
+    ),
+    WorkflowExemplar(
+        question="What is the dominant emotion in the topic about climate?",
+        branches_used=["nl2sql"],
+        rationale="Single-aggregation question over posts_v2. Evidence and "
+                  "kg add no signal; route to nl2sql only.",
+    ),
+    WorkflowExemplar(
+        question="Fact-check this Reddit claim about the Victory Day parade "
+                  "against official sources.",
+        branches_used=["evidence", "nl2sql"],
+        rationale="Explicit verification: evidence pulls authoritative "
+                  "reporting, nl2sql + claim_search finds the matching "
+                  "claims_v2 row(s) for the community side.",
     ),
     WorkflowExemplar(
         question="Who is the most influential account in topic T?",

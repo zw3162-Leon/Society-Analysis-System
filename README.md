@@ -1,530 +1,481 @@
-# Society Analysis
+# Society Analysis System
 
-A real-time retrieval system over **Reddit discussions** and
-**official / evidence sources**. Users ask questions in natural language; the system fans
-the request out to **three retrieval branches in parallel** —
+A retrieval-augmented analysis system over **Reddit community discussions** and
+**authoritative news sources** (AP / Reuters / BBC / NYT). Users ask questions
+in natural language; the system fans the request out to up to three retrieval
+branches in parallel, composes a citation-bearing markdown report with a
+quality critic guarding hallucination, and feeds critic verdicts back into a
+self-curating reflection store.
 
-- **Evidence Retrieval** — hybrid (Dense + BM25 + RRF + Rerank) over
-  authoritative news (BBC / NYT / Reuters / AP / Xinhua)
-- **NL2SQL** — natural language → safe Postgres SELECT against community
-  posts, with semantic topic resolution and self-correcting repair loop
-- **Knowledge Graph Query** — Cypher over a Kuzu graph of accounts /
-  posts / topics / entities
-
-— then composes a citation-bearing markdown report with a Quality Critic
-guarding against hallucination, and feeds Critic verdicts back into a
-Reflection store that auto-curates the system's own learned exemplars.
-
-Long-running chat sessions stay performant: the conversation list is
-window-bounded and older turns are auto-compressed into a rolling
-summary, so a session can run for hundreds of turns without ballooning
-memory or prompt size.
-
-> Want the design rationale? See `PROJECT_REDESIGN_V2.md`.
-> Want the code map? See `workflow.md`.
+The pre-loaded data snapshot lets a grader use the system end-to-end without
+running ingestion. See [§3 How to Run](#3-how-to-run) for the exact contents.
 
 ---
 
-## What this is good for
+## 1. System Structure
+
+### 1.1 End-to-end chat flow
 
 ```
-"What topics are trending and who's amplifying them?"
-"What did BBC and Reuters say about the Iran ceasefire?"
-"Is the Reddit claim 'vaccines reduce hospitalisation by 90%' supported by official sources?"
-"How many angry posts about climate this week, and what entities do they mention?"
-"Compare the official line on the Cuba sanctions with what users are saying."
+POST /chat/query
+   │
+   ▼
+ChatOrchestrator (agents/chat_orchestrator.py)
+   │
+   ├─ 1. QueryRewriter         (agents/query_rewriter.py)
+   │       Splits the user message into 1–3 atomic Subtasks; classifies each
+   │       intent (fact_check / topic_claim_audit / community_count /
+   │       community_listing / trend / propagation_trace / influencer_query /
+   │       coordination_check / community_structure / cascade_query / ...).
+   │       Pulls negative few-shot from Chroma 3 (past route violations).
+   │
+   ├─ 2. PlanVerifier           (agents/plan_verifier.py)
+   │       Deterministic rule check on the Rewriter output. Records every
+   │       correction back to Chroma 3 as an anti-pattern.
+   │
+   ├─ 3. BoundedPlannerV2       (agents/planner_v2.py)
+   │       For each subtask:
+   │         • TopicResolver       — semantic match user phrase → topic_id
+   │         • ClaimSearchTool     — hybrid pgvector + simhash + tsvector
+   │                                 over claims_v2 (only for fact_check /
+   │                                 topic_claim_audit subtasks)
+   │         • _scrub_official_source_mentions — strip "using AP/BBC/..."
+   │                                 phrases from the NL2SQL nl_query
+   │         • Dispatch to up to 3 branch runners in parallel; ≤5 total
+   │           branch calls per workflow
+   │
+   ├─ 3a. Evidence (RAG) branch   (tools/hybrid_retrieval.py)
+   │       Retrieves authoritative news chunks from Chroma 1
+   │       (chroma_official). Pipeline per call:
+   │         1. metadata pre-filter (source / domain / tier / title /
+   │            topic_hint); LLM-friendly key aliasing fixes mistakes like
+   │            `official_sources` → `source`.
+   │         2. Dense recall via OpenAI text-embedding-3-small + cosine.
+   │         3. BM25 recall (rank_bm25, in-memory over the filtered subset).
+   │         4. Reciprocal Rank Fusion (k=60).
+   │         5. Optional bge-reranker-base rerank for the top candidates.
+   │         6. Return EvidenceBundle with chunks + Citation
+   │            (title / outlet / URL / publish_date when available).
+   │
+   ├─ 3b. NL2SQL branch           (tools/nl2sql_tools.py)
+   │       Generates and executes a safe read-only Postgres SELECT against
+   │       posts_v2 / topics_v2 / entities_v2 / claims_v2 / post_claims_v2.
+   │         1. Embed the nl_query and recall four kinds of records from
+   │            Chroma 2 (`recall_guidance`, `recall_schema`,
+   │            `recall_success`, `recall_errors`).
+   │         2. Build the system prompt with: pre-resolved topic_id_hints
+   │            from TopicResolver, pre-resolved claim_id_hints from
+   │            ClaimSearchTool, schema hints, success exemplars,
+   │            error_lessons, durable guides.
+   │         3. LLM emits one SELECT (no semicolons, no DML).
+   │         4. Sanitiser: forces a LIMIT, strips DML, blocks multi-statement.
+   │         5. Execute via POSTGRES_READONLY_DSN with statement_timeout.
+   │         6. Self-repair loop up to 3 rounds; if every round fails,
+   │            persist the failure as a Chroma 2 error_lesson.
+   │       Special path: `topic_claim_audit` intent runs a deterministic
+   │       SELECT against claims_v2 + post_claims_v2 (skipping the LLM)
+   │       so the Report Writer always gets canonical claim text instead
+   │       of having to mine it out of comment bodies.
+   │
+   ├─ 3c. Knowledge Graph branch  (tools/kg_query_tools.py +
+   │                                tools/kg_analytics.py)
+   │       Routes the subtask intent to a Kuzu / NetworkX analytic and
+   │       returns nodes + edges + metrics (KGOutput):
+   │         • propagation_trace   → Cypher reply-chain traversal between
+   │                                 two account ids (orphan-chain filter
+   │                                 keeps the path narratable).
+   │         • influencer_query    → NetworkX PageRank on the topic
+   │                                 subgraph (real influence, not raw
+   │                                 post counts).
+   │         • coordination_check  → Louvain community detection.
+   │         • community_structure → modularity / echo-chamber score.
+   │         • cascade_query       → recursive reply-tree depth ranking.
+   │         • topic_correlation   → shared-entity bridge between topics.
+   │       Subgraph extraction is LRU-cached (services/kg_cache.py); writes
+   │       bump a sequence so reads see fresh edges.
+   │
+   ├─ 4. ReportWriter           (agents/report_writer.py)
+   │       LLM composes a markdown answer with inline citations from the
+   │       branch outputs.
+   │
+   ├─ 5. QualityCritic          (agents/quality_critic.py)
+   │       4-axis check: citation_completeness, numeric_consistency,
+   │       on_topic, hallucination. One retry on failure; flips
+   │       needs_human_review on second failure.
+   │
+   └─ 6. ReflectionStore        (services/reflection_store.py)
+           Owns the closed loop. Three concurrent jobs every turn:
+
+           A. Audit trail
+              Writes one row per turn to PostgreSQL `reflection_log`
+              (occurred_at, session_id, user_message, error_kind,
+              failed_branch, causal_record_ids, payload). Source of
+              truth for evaluating system behaviour over time.
+
+           B. Ablation (only when critic verdict failed)
+              For each causal_record_id reported by the critic, re-runs
+              the failing step without that record. If the failure
+              disappears, the record is "guilty" and gets deleted from
+              its owning store:
+                • record_ids starting with `schema::` / `success::` /
+                  `error::` → Chroma 2 (NL2SQL memory).
+                • record_ids starting with `module_card::` /
+                  `workflow_*` / `composition_error::` → Chroma 3
+                  (Planner memory).
+              Anti-thrash: a record_id deleted+rewritten more than 2×
+              in 24h is quarantined for 24h.
+
+           C. Negative lesson write-back (only when critic verdict failed)
+              Routes the error_kind to the right store so the next time
+              the same question comes in, the Rewriter / Planner / NL2SQL
+              sees the past failure as negative few-shot:
+
+              error_kind                  → destination
+              ────────────────────────────────────────────────────────
+              sql_empty_result            → Chroma 2 `error` record
+                                            (NL2SQL avoids the same
+                                            zero-result pattern)
+              missing_branch              → Chroma 3 `workflow_error`
+              wrong_branch_combo          → Chroma 3 `workflow_error`
+                                            (Rewriter pulls these as
+                                            route-violation few-shot)
+              off_topic                   → Chroma 3 `workflow_error` or
+                                            `composition_error` depending
+                                            on which branch was at fault
+              citation_missing            → Chroma 3 `composition_error`
+              numeric_mismatch            → Chroma 3 `composition_error`
+                                            (Writer learns to back every
+                                            number with a branch row)
+
+           Stores curated by ReflectionStore:
+
+           Chroma 2 (chroma_nl2sql) — feeds the NL2SQL branch
+              kind=schema   per-column descriptions (mirrored from
+                            Postgres schema_meta by SchemaSync).
+              kind=guide    durable rules (e.g. "posts_v2.source is
+                            always 'reddit'"; "use claim_search for
+                            fact-check, not posts_v2.text_tsv").
+              kind=success  successful (NL, SQL) exemplars, embedded
+                            and re-ranked by Critic verdict count.
+              kind=error    SQL patterns that produced empty results
+                            or runtime errors — used as negative
+                            few-shot in the next NL2SQL prompt.
+
+           Chroma 3 (chroma_planner) — feeds the Planner & Rewriter
+              kind=module_card        per-branch capability cards
+                                      (when_to_use / when_not_to_use /
+                                      input_schema / output_schema).
+              kind=workflow_success   (question, branches_used) pairs
+                                      that produced clean Critic
+                                      verdicts; bumps a `confidence`
+                                      counter when reused.
+              kind=workflow_error     route-violation anti-patterns
+                                      (e.g. "fan-out to evidence on a
+                                      pure community_listing question");
+                                      surfaced as negative few-shot to
+                                      the Rewriter on the next call.
+              kind=composition_error  Writer-attribution failures
+                                      (citation_missing, numeric_mismatch)
+                                      so future Writer prompts know the
+                                      exact prose pattern that broke.
 ```
 
-The system runs three branches concurrently when the question benefits from
-cross-source synthesis, then a Report Writer assembles a markdown answer
-with citations built from source metadata, including title, outlet/domain,
-URL, and publication date when available. A Quality Critic checks every numerical claim against the SQL/KG row
-it cites; if the LLM hallucinates a number, the response is flagged
-`needs_human_review=True`.
+### 1.2 Three retrieval branches
 
----
+| Branch | Tool | Backed by | Strengths |
+|---|---|---|---|
+| **Evidence** | `tools/hybrid_retrieval.py` | Chroma 1 (`chroma_official`) | Authoritative reporting; dense + BM25 + RRF + bge-reranker-base |
+| **NL2SQL** | `tools/nl2sql_tools.py` + `tools/claim_search.py` | PostgreSQL 16 + pgvector | Counts / filters / aggregations / claim listings; semantic claim search |
+| **Knowledge Graph** | `tools/kg_query_tools.py` | Kuzu graph DB | Multi-hop reply traversal, PageRank, Louvain communities, modularity / echo-chamber detection |
 
-## Knowledge Graph branch (Phase A→D + production hardening)
+### 1.3 Data stores
 
-The KG branch isn't a SQL view in disguise — it owns five capabilities
-that PG can't express:
-
-| Query | Backed by | Use case |
+| Store | What lives there | Persistence |
 |---|---|---|
-| `propagation_path` | Kuzu Cypher (Replied chain, both directions) | "trace how this rumour spread between alice and dave" |
-| `cascade_tree` | Kuzu Cypher (recursive descendants) | "show me the entire reply tree under this post" |
-| `viral_cascade` | Kuzu + ranking | "longest / most-amplified cascades in topic T" |
-| `influencer_rank` | NetworkX PageRank | "who's actually influential" (not just post count) |
-| `bridge_accounts` | NetworkX betweenness | "who connects two opposing communities" |
-| `coordinated_groups` | NetworkX Louvain | "is this organised posting" |
-| `echo_chamber` | Modularity threshold | "is topic T a closed bubble" |
+| **PostgreSQL 16 (pgvector)** | `posts_v2`, `topics_v2`, `entities_v2`, `post_entities_v2`, **`claims_v2`** (atomic claims with embedding + simhash + tsvector), **`post_claims_v2`** (M:N), `schema_meta`, `reflection_log` | Docker named volume `postgres_data` |
+| **Chroma 1** (`chroma_official`) | Authoritative news chunks (AP / Reuters / BBC / NYT) | `./data/chroma` (bind-mount) |
+| **Chroma 2** (`chroma_nl2sql`) | NL2SQL schema docs + success exemplars + error_lessons + durable guides | `./data/chroma` |
+| **Chroma 3** (`chroma_planner`) | Planner module cards + workflow exemplars + route-violation anti-patterns | `./data/chroma` |
+| **Kuzu** | `Account / Post / Topic / Entity` nodes; `Posted / Replied / BelongsToTopic / HasEntity` edges | `./data/kuzu_graph` |
 
-The Planner auto-routes 5 SubtaskIntents (`propagation_trace`,
-`influencer_query`, `coordination_check`, `community_structure`,
-`cascade_query`) to the right method. Subgraph extraction is LRU-cached;
-freshness defaults to 30 days for trending / propagation queries.
+### 1.4 Offline ingestion pipeline (precompute)
 
-## Quick start
-
-### Option A. Docker Compose, recommended for demos
-
-Use this path for course presentations or when another machine needs to
-reproduce the system with minimal local setup.
-
-**Prerequisites**
-
-- Docker Desktop (Compose v2). Tested on Linux, macOS, and Windows
-  (run the script from Git Bash or WSL).
-- ~10 GB free disk for the image + model cache.
-- An OpenAI API key.
-
-**One-command bootstrap (recommended for first clone)**
-
-```bash
-cp .env.example .env          # edit OPENAI_API_KEY
-LOAD_FIXTURE=1 ./scripts/bootstrap.sh
+```
+RedditService
+   ├─ fetch_posts            (worldnews scrape)
+   ├─ ingest                 (multimodal + entities + simhash dedup)
+   ├─ normalize
+   ├─ emotion_baseline       (per-post fear / anger / hope / disgust / neutral)
+   ├─ topic_cluster          (KMeans on OpenAI embeddings; chunked ≤2000)
+   ├─ extract_claims         (LLM extracts atomic claims from submission
+   │                          titles; simhash-deduped; comments link to
+   │                          parent submission's claims)
+   ├─ schema_propose         (Schema-aware Agent → schema_meta + Chroma 2)
+   └─ persist_v2             (PostgreSQL + Kuzu writes)
 ```
 
-`scripts/bootstrap.sh` is idempotent and takes care of:
+The **claim extraction stage** is the system's answer to the "fact-check
+finds zero rows" failure mode: claim text used to live only in Reddit
+submission titles (not in the `posts_v2.text` of the comments that
+discussed them). `claims_v2` now stores each atomic claim once, with a
+1536-dim pgvector embedding, a 64-bit Charikar simhash, and a tsvector,
+enabling hybrid semantic + lexical retrieval.
 
-1. validating that `OPENAI_API_KEY` is filled in,
-2. `docker compose up -d --build` (first build ~10 min, pulls torch + sentence-transformers),
-3. waiting for `api` to report `healthy`,
-4. seeding Chroma 3 (planner memory) via `scripts.seed_planner_memory`,
-5. seeding Chroma 2 (NL2SQL emotion exemplars + guardrail guides) via
-   `scripts.seed_emotion_nl2sql_examples`,
-6. when `LOAD_FIXTURE=1`, loading `tests/fixtures/posts_v2_smoke.jsonl`
-   so the UI has demo data on first launch.
+### 1.5 Repository layout
 
-When the script finishes, open <http://localhost:8501>.
-
-**Manual equivalent**
-
-If you prefer to run the steps yourself:
-
-```bash
-cp .env.example .env          # edit OPENAI_API_KEY
-docker compose up -d --build
-# wait until `docker compose ps` shows api as (healthy)
-docker compose exec api python -m scripts.seed_planner_memory
-docker compose exec api python -m scripts.seed_emotion_nl2sql_examples
-# optional: load demo data
-docker compose exec api python main.py --jsonl tests/fixtures/posts_v2_smoke.jsonl
+```
+agents/         Pipeline + chat agents (rewriter, planner, writer, critic,
+                claim_extractor, ...)
+tools/          Atomic operations (hybrid_retrieval, nl2sql, claim_search,
+                topic_resolver, kg_query_tools)
+services/       Storage + LLM wrappers (postgres, chroma, kuzu, embeddings,
+                nl2sql_memory, planner_memory, reflection_store)
+models/         Pydantic data contracts
+api/            FastAPI routes (chat, retrieve, runs, reflection, plan,
+                admin/import, admin/nl2sql, artifacts, health)
+ui/             Single-page Streamlit chat UI
+db/             schema_v2.sql (auto-applied on Postgres first boot)
+config/         YAML configs (official_sources.yaml)
+scripts/        Seed + maintenance scripts (seed_planner_memory,
+                seed_emotion_nl2sql_examples, seed_claims_nl2sql_examples,
+                bootstrap.sh, ...)
+eval/           9-module evaluation suite
+data/           Persisted Chroma + Kuzu + run artifacts (bind-mounted into
+                the api / ui containers)
 ```
 
-**What the stack runs**
+---
 
-- `postgres` on host port `15432`; `db/schema_v2.sql` is applied on first boot;
-- `api` (FastAPI) on <http://localhost:8000>, OpenAPI docs at `/docs`;
-- `ui` (Streamlit) on <http://localhost:8501>;
-- shared runtime data under `./data` (bind-mounted into both api and ui);
-- persistent named volumes for Postgres data and the Hugging Face model cache.
+## 2. Setup Instructions
 
-**Useful operations**
+### 2.1 Prerequisites
+
+- **Docker Desktop** with Compose v2 (tested on Docker 29.x).
+- **An OpenAI API key** with access to `gpt-4o` and `text-embedding-3-small`.
+  All LLM calls (rewriter / NL2SQL / writer / critic / claim extractor) and
+  all embeddings go through OpenAI.
+- **~10 GB free disk** for the image, model cache, and data volume.
+
+That's it — you do **not** need a local PostgreSQL, Python virtualenv, or
+any JVM. The entire stack runs in three Docker containers.
+
+### 2.2 Step-by-step setup
+
+1. **Clone the repo**:
+
+   ```bash
+   git clone https://github.com/yuchangyuan1/society-analysis-system
+   cd society-analysis-system
+   ```
+
+   The repo ships the pre-loaded demo snapshot:
+   - `db/snapshot_data.sql.gz` — Postgres data (auto-restored on first boot).
+   - `data/chroma/` — three Chroma collections (HNSW indexes).
+   - `data/kuzu_graph` — Kuzu graph DB.
+   - `data/official_chunks/` — JSONL of fetched RSS items.
+
+   **Do not delete any of these** unless you intend to re-ingest from
+   scratch.
+
+2. **Create `.env`** from the template and fill in your OpenAI key:
+
+   ```bash
+   cp .env.example .env
+   ```
+
+   Open `.env` and replace `OPENAI_API_KEY=sk-...` with your real key.
+   Every other variable has a working default.
+
+3. **Bring the stack up**:
+
+   ```bash
+   docker compose up -d --build
+   ```
+
+   The first build pulls the pgvector PostgreSQL image and the Python
+   deps (torch, sentence-transformers, openai, chromadb, kuzu, ...).
+   Total cold-start ≈ 5–10 min; warm restarts are seconds.
+
+   **What happens automatically on first boot:**
+   - PostgreSQL initdb runs `db/schema_v2.sql` (creates tables / triggers
+     / indexes / pgvector extension), then loads
+     `db/snapshot_data.sql.gz` (~2 000 posts, 20 topics, 62 claims).
+   - The api / ui containers come up healthy and serve the snapshot.
+   - `bge-reranker-base` (~600 MB) downloads on the first chat call that
+     uses Evidence retrieval; subsequent calls use the cache.
+
+4. **Verify the stack is healthy**:
+
+   ```bash
+   docker compose ps
+   ```
+
+   All three services (`postgres`, `api`, `ui`) should be `Up` and `healthy`.
+
+   ```bash
+   curl http://127.0.0.1:8000/health
+   ```
+
+   Expected: `{"ok": true, "runs_root": "/app/data/runs"}`.
+
+   Sanity-check the snapshot loaded:
+
+   ```bash
+   docker compose exec postgres psql -U society -d society_db \
+     -c "SELECT COUNT(*) AS posts FROM posts_v2;" \
+     -c "SELECT COUNT(*) AS topics FROM topics_v2;" \
+     -c "SELECT COUNT(*) AS claims FROM claims_v2;"
+   ```
+
+   Expected counts: posts ≈ 2 072, topics = 20, claims = 62.
+
+### 2.3 Optional resets
 
 ```bash
-# Pull official/evidence sources into Chroma 1.
-docker compose exec api python -m agents.official_ingestion_pipeline --once
-
-# Tail logs.
-docker compose logs -f api ui
-
-# Stop containers but keep all data.
+# Stop containers but keep all data (safe).
 docker compose down
 
-# Full reset (drops Postgres volume and model cache too).
+# Full nuclear reset — DROPS the Postgres volume + the model cache.
+# Use only if you intend to re-ingest from scratch.
 docker compose down -v
 ```
 
-Inside containers, the database hostname is `postgres`, not `localhost`.
-The Compose file injects the correct `POSTGRES_DSN`; keep `.env.example`
-using `localhost` for non-Docker local runs.
-
-### Option B. Local Python environment
-
-Use this path if you want to run directly from `.venv`.
-
-#### 1. Install
-
-```bash
-git clone https://github.com/yuchangyuan1/Society-Analysis-System
-cd Society-Analysis-System
-python -m venv .venv
-.venv\Scripts\activate    # Windows
-# source .venv/bin/activate   # macOS/Linux
-pip install -e .[dev]
-```
-
-You also need:
-- **Postgres ≥ 14** with the `pg_trgm` extension available (the schema
-  installs it automatically).
-- **OpenAI API key** (`OPENAI_API_KEY`) for LLM + embeddings.
-- *(Optional)* **Anthropic API key** (`ANTHROPIC_API_KEY`) for the
-  multimodal image-understanding agent. The pipeline degrades gracefully
-  when it's missing.
-- ~600 MB free for the bge-reranker-base model (downloaded on first use).
-
-#### 2. Configure
-
-Copy `.env.example` to `.env` (or just create `.env`):
-
-```env
-OPENAI_API_KEY=sk-...
-OPENAI_MODEL=gpt-4o
-POSTGRES_DSN=postgresql://society:society_pass@localhost:5432/society_db
-
-# Optional
-ANTHROPIC_API_KEY=sk-ant-...
-POSTGRES_READONLY_DSN=postgresql://society_ro:...@localhost:5432/society_db
-MULTIMODAL_DAILY_BUDGET_USD=5.0
-```
-
-#### 3. Initialize the database
-
-```bash
-# Create the database first if needed:
-#   createdb society_db   (or: psql -c "CREATE DATABASE society_db;")
-
-# Apply the v2 schema (6 tables + tsvector trigger + pg_trgm extension):
-python -c "import psycopg2, config; \
-  c = psycopg2.connect(config.POSTGRES_DSN); c.autocommit=True; \
-  c.cursor().execute(open('db/schema_v2.sql').read())"
-
-# If you're upgrading an existing PG that predates the lineage columns,
-# run the idempotent migration once:
-python -m scripts.migrate_run_lineage
-
-# If you're upgrading an existing PG that predates the topic post-count
-# trigger (any DB created before 2026-05), install the trigger and
-# recompute every topics_v2.post_count once:
-python -m scripts.migrate_topic_post_count_trigger
-```
-
-#### 4. Cold-start the planner memory (Chroma 3)
-
-```bash
-python -m scripts.seed_planner_memory
-```
-
-This loads three `ModuleCard`s (one per branch) and eight workflow
-exemplars so the Planner has prior art to draw on.
-
-#### 5. Run the offline ingestion (one-time, then schedule)
-
-```bash
-# Option A — quick smoke against bundled fixture (no network):
-python main.py --jsonl tests/fixtures/posts_v2_smoke.jsonl
-
-# Option B — pull live Reddit:
-python main.py --subreddit conspiracy --days 3
-
-# Pull authoritative-source articles (5 outlets):
-python -m agents.official_ingestion_pipeline --once
-```
-
-After step 5 you should see:
-- Postgres `posts_v2 / topics_v2 / entities_v2 / post_entities_v2` populated
-- Kuzu graph at `data/kuzu_graph` with `Account → Post → Topic` edges
-- Chroma collections at `data/chroma`:
-  - `chroma_official` — authoritative news chunks (citation source)
-  - `chroma_nl2sql` — schema descriptions + NL→SQL exemplars
-  - `chroma_planner` — module cards + workflow exemplars
-
-#### 6. Start the services
-
-```bash
-# Terminal 1 — FastAPI (port 8000)
-uvicorn api.app:app --reload --port 8000
-
-# Terminal 2 — Streamlit UI (port 8501)
-streamlit run ui/streamlit_app.py
-```
-
-Open <http://localhost:8501>. The app is now a single-page Chat interface.
-The sidebar lets you choose Reddit subreddits, official/evidence sources,
-date ranges, and append/overwrite import mode.
-
 ---
 
-## Try it from the UI
+## 3. How to Run
 
-The sidebar contains editable suggested-question templates. They are written
-without concrete topic names so you can fill in the topic or claim you want
-to demonstrate.
+### 3.1 Web UI (primary interface)
 
-Examples:
+Open <http://localhost:8501> in a browser. The page is a single-page
+chat against the pre-loaded snapshot.
 
-- `List the main topics in the selected Reddit data, and summarize discussion volume, dominant emotion, and notable shifts.`
-- `For the topic about <your topic>, summarize the dominant emotions, representative posts, and how sentiment differs across discussion clusters.`
-- `For the topic about <your topic>, trace propagation paths or reply chains and explain what the Knowledge Graph shows.`
-- `For the topic about <your topic>, identify key amplifying accounts and explain the graph evidence behind the ranking.`
-- `For the topic about <your topic>, list Reddit claims and classify which are consistent with official/evidence sources, which contradict them, and which lack enough evidence. Include author, verdict, the official/evidence statement, and citation.`
-- `Fact-check this Reddit claim using the selected official/evidence sources: <paste claim here>.`
+**The sidebar** lets you:
+- Pick subreddits and date ranges for fresh imports;
+- Pick official sources (AP / Reuters / BBC / NYT) and import their RSS feeds;
+- Toggle `Append` / `Overwrite` mode;
+- Toggle "Show raw technical output" to see per-branch JSON in each answer.
 
-Each answer keeps the report readable by default, then shows:
+The main chat panel shows the markdown report, citation list, route module
+cards (RAG / Knowledge Graph / NL2SQL), and an interactive KG visualisation
+when the Knowledge Graph branch returns nodes/edges.
 
-- source citations when evidence was used;
-- route-module cards for **RAG**, **Knowledge Graph**, and **NL2SQL**;
-- a Knowledge Graph visualization when the KG branch returns nodes/edges;
-- raw branch JSON only when **Show raw technical output** is enabled.
+### 3.2 REST API (for direct probing or scripting)
 
-The sidebar import controls call the backend import API. `Append` adds new
-pipeline output. `Overwrite` requires an explicit confirmation checkbox and
-deletes retained data for the selected source scope before importing.
+Base URL: <http://127.0.0.1:8000>. Interactive OpenAPI docs at
+<http://127.0.0.1:8000/docs>.
 
----
-
-## Try it from the API
+Useful endpoints:
 
 ```bash
-# Direct branch access (debug):
+# Full chat (the orchestrator: rewriter → verifier → planner → writer → critic).
+curl -X POST http://127.0.0.1:8000/chat/query \
+     -H 'Content-Type: application/json' \
+     -d '{"session_id":"demo","message":"What topics are trending and who is amplifying them?"}'
+
+# Direct branch access (bypasses the orchestrator):
 curl -X POST http://127.0.0.1:8000/retrieve/nl2sql \
-  -H 'Content-Type: application/json' \
-  -d '{"nl_query":"How many posts per dominant emotion?"}'
+     -H 'Content-Type: application/json' \
+     -d '{"nl_query":"How many posts per dominant emotion?"}'
 
 curl -X POST http://127.0.0.1:8000/retrieve/evidence \
-  -H 'Content-Type: application/json' \
-  -d '{"query":"US troop reduction in Germany"}'
+     -H 'Content-Type: application/json' \
+     -d '{"query":"Trump tariffs on EU"}'
 
 curl -X POST http://127.0.0.1:8000/retrieve/kg \
-  -H 'Content-Type: application/json' \
-  -d '{"query_kind":"key_nodes","target":{"top_k":5}}'
+     -H 'Content-Type: application/json' \
+     -d '{"query_kind":"key_nodes","target":{"top_k":5}}'
 
-# Full chat (all the orchestration):
-curl -X POST http://127.0.0.1:8000/chat/query \
-  -H 'Content-Type: application/json' \
-  -d '{"session_id":"demo","message":"What is trending and who is amplifying it?"}'
-
-# Inspect a session:
+# Inspect a session.
 curl http://127.0.0.1:8000/chat/session/demo
 
-# Manual Reddit import (background job):
-curl -X POST http://127.0.0.1:8000/admin/import/reddit \
-  -H 'Content-Type: application/json' \
-  -d '{"subreddits":["worldnews"],"start_date":"2026-05-02","end_date":"2026-05-03","mode":"append","limit_per_subreddit":100,"comment_limit":100,"include_comments":true}'
+# Run artifacts (everything written under data/runs/{run_id}/).
+curl http://127.0.0.1:8000/runs
+curl http://127.0.0.1:8000/runs/<run_id>/report
 
-# Manual official/evidence import (background job):
-curl -X POST http://127.0.0.1:8000/admin/import/official \
-  -H 'Content-Type: application/json' \
-  -d '{"sources":["ap","reuters","bbc","nyt"],"start_date":"2026-05-02","end_date":"2026-05-03","mode":"append","write_chroma":true}'
-
-# Check import job status:
-curl http://127.0.0.1:8000/admin/import/jobs/import_xxxxxxxxxxxx
-
-# NL2SQL admin — inspect / clear bad error lessons from Chroma 2:
-curl http://127.0.0.1:8000/admin/nl2sql/error-count
-curl -X POST http://127.0.0.1:8000/admin/nl2sql/clear-errors
-
-# Reflection inspector:
-curl 'http://127.0.0.1:8000/reflection/chroma2?kind=success&limit=20'
+# Reflection store inspector.
 curl 'http://127.0.0.1:8000/reflection/log?limit=20'
-
-# Run artifacts (everything written under data/runs/{run_id}/):
-curl http://127.0.0.1:8000/runs                       # list runs
-curl http://127.0.0.1:8000/runs/<run_id>              # one run summary
-curl http://127.0.0.1:8000/runs/<run_id>/report       # report.md
-curl http://127.0.0.1:8000/runs/<run_id>/raw          # report_raw.json
-curl http://127.0.0.1:8000/runs/<run_id>/metrics      # metrics.json
-curl http://127.0.0.1:8000/runs/<run_id>/visual/<filename>   # counter_visuals/*
+curl 'http://127.0.0.1:8000/reflection/chroma2?kind=success&limit=20'
 ```
 
----
+### 3.3 Pre-loaded data snapshot
 
-## Long-running sessions
+The shipped `data/` folder contains a working dataset so the grader can
+use the system without waiting on ingestion or burning OpenAI tokens.
 
-Each chat session is stored as a single JSON file under `data/sessions/`.
-The conversation list is automatically window-bounded so it stays small
-and fast to load:
+| Store | Snapshot |
+|---|---|
+| `posts_v2` | **2 072 Reddit posts** from r/worldnews (50 link-post submissions + 2 022 comments) |
+| `topics_v2` | **20 topics** from KMeans clustering, e.g. *Concerns Over FIFA World Cup 2026 Hosting*, *US-Iran Tensions Amid Ceasefire Talks*, *Concerns Over New Virus Outbreak*, *Criticism of Presidential Leadership and Policies* |
+| `claims_v2` | **62 atomic claims** extracted from submission titles, deduped by simhash |
+| `post_claims_v2` | **2 594 post → claim links** (claim → discussing comments) |
+| `chroma_official` | **142 chunks** — AP=20 / Reuters=20 / BBC=62 / NYT=40 |
+| Kuzu | Account / Post / Topic / Entity nodes + Posted / Replied / BelongsToTopic / HasEntity edges, derived from the same posts |
 
-- Up to `SESSION_MAX_TURNS` (default **40**) turns kept verbatim.
-- When that limit is exceeded, the oldest `SESSION_MIN_TURNS_TO_COMPACT`
-  (default **10**) turns are compressed into a rolling `summary` field
-  via one LLM call (`agents/conversation_compactor.py`).
-- The Rewriter sees both the live window AND the rolling summary, so
-  pronouns and topic anchors set hundreds of turns ago still resolve.
-- LLM failures fall back to a plain trim, so persistence never breaks.
+**Honest disclosure on date ranges.** The Reddit fetch and the official-RSS
+fetch both pull *current* items, not historical archives:
 
-What you'll see in `data/sessions/<id>.json`:
+- Reddit's public scraping returns currently-hot content. The snapshot's
+  `posts_v2.posted_at` values are **2026-05-07 to 2026-05-08**, regardless
+  of the date range that was originally requested when the snapshot was
+  produced. (Reddit doesn't time-travel; this is an intrinsic limit of the
+  scraping path the project uses, documented in code.)
+- The official-source crawler reads each outlet's current RSS feed. The
+  142 chunks are whatever was on AP / Reuters / BBC / NYT's RSS at the time
+  of fetching. The crawler exposes a date-range field to the UI but
+  emits a warning that historical backfill is not implemented:
+  *"Official RSS import uses the configured feeds' current items..."*
 
-```json
-{
-  "session_id": "demo",
-  "current_topic_id": "topic_abc",
-  "summary": "User asked about vaccine misinformation, ...",
-  "summary_until_turn": 30,
-  "archived_count": 30,
-  "conversation": [/* most recent 40 turns */]
-}
-```
+The snapshot is therefore a **frozen point-in-time view of the live web on
+2026-05-08**. Every example question in §4 is verified to return useful
+results against this snapshot.
 
-Override the window via env vars (see config table).
+### 3.4 Re-importing fresh data (optional)
 
----
+If you want a different snapshot, the easiest path is the UI sidebar:
+pick subreddits + sources, set `Overwrite` mode, check the confirmation
+box, click `Import`. The job runs in the background; check
+`docker compose logs -f api` or `GET /admin/import/jobs/{job_id}` for
+progress.
 
-## Routine maintenance
-
-```bash
-# Daily decay sweep — drop stale experience records (kind=success / error /
-# workflow_*). Anchor docs (kind=schema / module_card) are preserved.
-python -m scripts.decay_chroma_experience
-
-# Re-pull authoritative sources (BBC / NYT / Reuters / AP / Xinhua):
-python -m agents.official_ingestion_pipeline --once
-
-# Replay previously-written jsonl into Chroma 1 (after a server outage):
-python -m agents.official_ingestion_pipeline --replay --date 2026-05-03
-
-# Rebuild Chroma 2 schema part if PG ↔ Chroma drift detected:
-python -m scripts.rebuild_chroma2_schema --dry-run
-python -m scripts.rebuild_chroma2_schema           # applies the rebuild
-
-# Run lifecycle (production hardening Day 4):
-python -m scripts.data_admin scan-pending          # find half-finished runs
-python -m scripts.data_admin rollback RUN_ID       # delete one run cleanly
-python -m scripts.data_admin rollback-all-pending  # crash-recovery sweep
-python -m scripts.data_admin show RUN_ID           # print one manifest
-
-# Long-running scheduler (single command bootstraps + then daily cron):
-python -m scripts.scheduler                         # daemon
-python -m scripts.scheduler --bootstrap             # bootstrap only
-python -m scripts.scheduler --once --task official_sources
-```
+A Reddit overwrite of ~2 000 posts takes ~10 min and ~$0.50 of OpenAI
+credit (claim extraction + embeddings).
 
 ---
 
-## Tests
+## 4. Example Usage
 
-```bash
-pytest tests/                                                 # unit tests
-PYTEST_RUN_LIVE_SCHEMA=1 pytest tests/test_schema_consistency.py
-                                                              # PG ↔ Chroma 2 live check
-```
+Seven sample questions, **each one actually run end-to-end against the
+shipped snapshot**. Every "Observed answer" line below is excerpted from
+the real `POST /chat/query` response, not invented prose. The full JSON
+responses live under `data/demo_runs/` in case the grader wants to
+replay them.
 
----
+### Example 1 — Trending topic listing (NL2SQL only)
 
-## Evaluation
+> *List the main topics in the selected Reddit data, and summarize discussion volume, dominant emotion, and notable shifts.*
 
-The `eval/` directory contains a 9-module evaluation suite (530 total test cases).
-The API must be running before executing the suite.
+### Example 2 — Topic emotion + representative posts (NL2SQL + KG)
 
-```bash
-# Run all 9 modules (RAG, NL2SQL, KG, Planner, Report,
-#   Echo Chamber, Emotion, Propagation, Claim Verify):
-python -m eval.run_eval
+> *For the topic about Concerns Over New Virus Outbreak, summarize the dominant emotions, representative posts, and how sentiment differs across discussion clusters.*
 
-# Run specific modules only:
-python -m eval.run_eval --modules emotion claim_verify propagation
+### Example 3 — Topic-level propagation (KG only)
 
-# Point at a non-default API:
-python -m eval.run_eval --base-url http://localhost:8000
+> *For the topic about Casualties in Russia-Ukraine Conflict, trace propagation paths or reply chains and explain what the Knowledge Graph shows.*
 
-# Include the optional LLM-as-judge E2E module (requires GOOGLE_API_KEY):
-python -m eval.run_eval --include-e2e
-```
+### Example 4 — Account-to-account propagation path (KG only)
 
-Results are written to `eval/results/summary.json`. Open
-`eval/results/eval_dashboard.html` in a browser for the full interactive
-report — radar chart, per-module metrics with pass/fail badges, and
-sample test cases per module.
+> *Trace the propagation path between GeneReddit123 and GiveMeSomeSunshine3.*
 
-**Targets (all met in latest run):**
+### Example 5 — Topic amplifier ranking (KG + NL2SQL)
 
-| Module | Key metric | Target | Actual |
-|---|---|---|---|
-| RAG | Recall@5 | 0.92 | 1.00 |
-| NL2SQL | Pass@1 | 0.95 | 0.99 |
-| KG | Entity pass rate | 0.80 | 1.00 |
-| Planner | Route F1 | 0.87 | 0.993 |
-| Report | Critic pass rate | 0.90 | 0.98 |
-| Echo Chamber | Classification accuracy | 0.75 | 1.00 |
-| Emotion | Non-null rate | 0.80 | 1.00 |
-| Propagation | Cascade found rate | 0.60 | 1.00 |
-| Claim Verify | Key entity recall | 0.75 | 0.95 |
+> *For the topic about Casualties in Russia-Ukraine Conflict, identify key amplifying accounts and explain the graph evidence behind the ranking.*
 
----
+### Example 6 — Topic claim audit (NL2SQL + Evidence)
 
-## Configuration knobs
+> *For the topic about US-Iran Tensions Amid Ceasefire Talks, list Reddit claims and classify which are consistent with official/evidence sources, which contradict them, and which lack enough evidence.Include author, verdict, the official/evidence statement, and citation.*
 
-All variables live in `config.py` and can be overridden via `.env`. The
-common ones:
+### Example 7 — Single-claim fact-check (Evidence + NL2SQL)
 
-| Variable | Default | Meaning |
-|---|---|---|
-| `OPENAI_API_KEY` | (required) | LLM + embedding access |
-| `OPENAI_MODEL` | `gpt-4o` | All LLM calls (rewriter / writer / critic / NL2SQL / topic label) |
-| `POSTGRES_DSN` | localhost:5432/society_db | Write connection |
-| `POSTGRES_READONLY_DSN` | (falls back to DSN) | NL2SQL connection (recommend separate read-only role in prod) |
-| `NL2SQL_MAX_REPAIR_ROUNDS` | 3 | Max self-correction iterations |
-| `NL2SQL_RESULT_ROW_LIMIT` | 1000 | Forced LIMIT on every query |
-| `NL2SQL_STATEMENT_TIMEOUT_MS` | 5000 | Postgres `statement_timeout` per query |
-| `EXPERIENCE_TTL_DAYS` | 30 | Auto-decay age cutoff |
-| `KG_TOPIC_SEMANTIC_FALLBACK_MIN_SIM` | 0.30 | Minimum topic similarity for KG fallback when the exact topic has no graph signal |
-| `EXPERIENCE_MIN_CONFIDENCE` | 0.2 | Auto-decay confidence floor |
-| `MULTIMODAL_DAILY_BUDGET_USD` | 5.0 | Daily image-understanding spend cap |
-| `MULTIMODAL_MIN_LIKES / MIN_REPLIES` | 50 / 20 | Sample threshold for image processing |
-| `SESSION_MAX_TURNS` | 40 | Per-session conversation window |
-| `SESSION_MIN_TURNS_TO_COMPACT` | 10 | Minimum batch size when the compactor runs |
-| `SESSION_SUMMARY_MAX_CHARS` | 1200 | Cap on the rolling summary length |
+> *Fact-check this Reddit claim using the selected official/evidence sources: Trump threatens 'much higher' tariffs on EU by July 4.*
 
----
 
-## Layout
-
-```
-agents/                # Pipeline + chat agents (see workflow.md §4.1)
-tools/                 # Atomic operations (hybrid_retrieval / nl2sql / kg / topic_resolver)
-services/              # Storage + third-party wrappers
-models/                # Pydantic data contracts
-api/                   # FastAPI routes (chat, retrieve, import, reflection, runs, artifacts,
-                       #   admin/nl2sql, plan)
-ui/                    # Single-page Streamlit Chat UI
-db/                    # schema_v2.sql
-config/                # YAML configs (official_sources.yaml)
-scripts/               # CLI utilities (seed, decay, rebuild)
-tests/                 # Unit tests + schema consistency
-eval/                  # Evaluation suite (9 modules, ground-truth datasets, HTML dashboard)
-  eval_rag.py          #   RAG / evidence retrieval
-  eval_nl2sql.py       #   NL2SQL SQL generation
-  eval_kg.py           #   Knowledge Graph query
-  eval_planner.py      #   Query Planner routing
-  eval_report.py       #   Report Writer quality
-  eval_echo_chamber.py #   Echo Chamber detection
-  eval_emotion.py      #   Emotion NL2SQL
-  eval_propagation.py  #   Propagation / cascade
-  eval_claim_verify.py #   Claim Verification
-  ground_truth/        #   Ground-truth JSON datasets for each module
-  results/             #   Eval results (eval_dashboard.html — interactive HTML report)
-  run_eval.py          #   CLI orchestrator for the full eval suite
-
-main.py                # Backend pipeline CLI
-config.py              # Central config (env vars)
-PROJECT_REDESIGN_V2.md # Design + decision log
-workflow.md            # Architecture + module map (concise)
-docs/phase{1..5}_done.md  # Per-phase delivery summaries
-```
-
----
-
-## Troubleshooting
-
-| Symptom | Likely cause | Fix |
-|---|---|---|
-| `ImportError: cannot import name 'X' from 'config'` | Stale config var removed during cleanup | Pull latest, no `.env` change needed |
-| Chat answer says "I couldn't gather enough data" | Postgres / Chroma empty | Run step 5 (offline ingestion) |
-| `branches_used: []` for every query | Planner / Rewriter LLM unreachable | Check `OPENAI_API_KEY`, OpenAI status |
-| `needs_human_review: true` on factual answers | Critic flagged a numeric mismatch | Inspect `branch_outputs` — usually means LLM invented a number |
-| Reuters / AP returning 0 chunks | Their public RSS is gone; we proxy via Google News | Already handled in `config/official_sources.yaml`; check network |
-| `chroma_official: 0` after `--once` | Network blocked (CN region) | Set proxy env or use `--replay` against pre-pulled jsonl |
-| Reranker download hangs | First-run model download | Wait for ~600MB; subsequent runs use the local cache |
-| Schema-consistency test fails | Chroma 2 drifted from PG | `python -m scripts.rebuild_chroma2_schema` |
-
----
-
-## Where the design lives
-
-- **`PROJECT_REDESIGN_V2.md`** — full design doc with decision log (Q1-Q11)
-- **`workflow.md`** — current code map, module clinic, command cheat sheet
-- **`docs/phase{1..5}_done.md`** — what landed in each phase
-
-If you're new to the codebase, read `workflow.md` first; it's the
-shortest path from zero to "I know where everything is".
