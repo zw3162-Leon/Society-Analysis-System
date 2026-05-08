@@ -23,6 +23,9 @@ def _resolve_runs_root() -> Path:
 
 
 RUNS_ROOT = _resolve_runs_root()
+# Ensure RUNS_ROOT exists at startup so /health returns ok=true on a
+# fresh clone before any pipeline run has written its first manifest.
+RUNS_ROOT.mkdir(parents=True, exist_ok=True)
 
 
 app = FastAPI(

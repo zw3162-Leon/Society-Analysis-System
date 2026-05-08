@@ -440,15 +440,26 @@ progress.
 A Reddit overwrite of ~2 000 posts takes ~10 min and ~$0.50 of OpenAI
 credit (claim extraction + embeddings).
 
+### 3.5 Troubleshooting
+
+| Symptom | Cause | Fix |
+|---|---|---|
+| `docker compose up` fails with port-in-use error | Host port 8000 / 8501 / 15432 already taken | Stop the conflicting service, or remap in `docker-compose.yml` (e.g. change `"8000:8000"` to `"8010:8000"` and update `RESEARCH_API_BASE` in `.env`). |
+| `/health` returns `{"ok": false}` | Snapshot didn't auto-restore (initdb only runs on an empty Postgres volume) | Stop the stack, `docker compose down -v` to drop the volume, then `docker compose up -d --build` to re-init from `db/snapshot_data.sql.gz`. |
+| `posts_v2` is empty after first boot | Same as above | Same fix. |
+| `/chat/query` answers say *"I couldn't gather enough data"* | Bad / missing OpenAI key, or empty stores | Verify `.env`'s `OPENAI_API_KEY`; sanity-check counts (§2.2 step 4). |
+| `branches_used: []` for every query | OpenAI rejecting requests | Check API key validity & rate limits; restart api with `docker compose restart api`. |
+| First chat call is slow (~30 s) | bge-reranker-base model downloading on demand | One-time; subsequent calls use the cached model in the `model_cache` volume. |
+| `needs_human_review: true` on a factual answer | Quality Critic flagged numeric_consistency or hallucination | The system flagging itself is by design; inspect `branch_outputs` in the response to see what it caught. |
+| Reuters / AP RSS returning 0 chunks | Outlet's RSS unreachable from your network | Already proxied via Google News in `config/official_sources.yaml`; if all four return zero, the snapshot still has the shipped 142 chunks. |
+
 ---
 
 ## 4. Example Usage
 
-Seven sample questions, **each one actually run end-to-end against the
-shipped snapshot**. Every "Observed answer" line below is excerpted from
-the real `POST /chat/query` response, not invented prose. The full JSON
-responses live under `data/demo_runs/` in case the grader wants to
-replay them.
+Seven sample questions, each verified end-to-end against the shipped
+snapshot. Paste the prompt into the chat at <http://localhost:8501>
+or `POST /chat/query` to see the real response.
 
 ### Example 1 — Trending topic listing (NL2SQL only)
 
